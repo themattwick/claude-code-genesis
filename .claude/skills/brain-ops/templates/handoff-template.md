@@ -5,7 +5,7 @@
 **Prepared by:** [Grok / Claude]
 
 ## Read this first (recommended order)
-1. `FINAL_NIGHT_REPORT_*.md` (or equivalent session summary)
+1. Latest file in `BRAIN/handoffs/` (or equivalent session summary)
 2. `BRAIN/decisions/` — most important architectural choices
 3. `BRAIN/bugs/` — hard cases + concrete proposals
 4. `BRAIN/checkpoints/` — recent progress rhythm
@@ -13,7 +13,7 @@
 
 ## Current Status
 - What is working
-- What is blocked / XFAIL / known gaps
+- What is blocked / known gaps
 - Baseline numbers / metrics captured
 
 ## Your first 3 moves (priority order)
@@ -22,7 +22,7 @@
 3. 
 
 ## Important context for the other model
-- [Any special instructions, naming conventions, "tree-sitter first" rules, memory discipline, etc.]
+- [Any special instructions, naming conventions, project-specific rules, memory discipline, etc.]
 
 ## Artifacts ready for you
 - Tests to run

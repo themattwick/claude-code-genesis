@@ -22,6 +22,7 @@ metadata:
 - Checkpoint discipline (save progress every 60-90 min)
 - Turn raw work into structured entries in `BRAIN/decisions/`, `bugs/`, `learnings/`, `patterns/`
 - Prepare high-quality handoffs for other models
+- Consolidate scattered notes into clean, durable knowledge
 - Keep the Project BRAIN healthy
 
 ## Commands
@@ -31,6 +32,8 @@ brain checkpoint "what I just completed"   # Save progress
 brain handoff                               # Cross-model handoff
 brain hygiene                               # Health check
 brain report                                # Session summary
+brain organize                              # Structure raw notes into entries
+brain consolidate                           # Synthesize checkpoints into decisions/learnings
 ```
 
 ## Helper Script

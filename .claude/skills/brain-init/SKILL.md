@@ -2,8 +2,8 @@
 name: brain-init
 description: >
   One-time initialization of Project BRAIN.
-  Creates the full BRAIN/ directory structure, README, QUICK-REFERENCE,
-  ready-to-paste sections for AGENTS.md / CLAUDE.md, and starter hooks.
+  Creates the full BRAIN/ directory structure, a README, a QUICK-REFERENCE cheat sheet,
+  and an optional reminder hook.
   Use this when starting a new serious project that needs long-term cross-model knowledge.
   Recommended invocation: "brain init" or "brain setup".
 metadata:
@@ -36,6 +36,14 @@ BRAIN/
 ├── patterns/              # Reusable patterns
 └── handoffs/              # Cross-model transfer docs
 ```
+
+It also seeds `README.md` and `QUICK-REFERENCE.md` inside `BRAIN/`.
+
+## Optional: Reminder Hook
+
+A starter hook (`templates/brain-reminder.sh`) is included. Copy it to
+`.claude/hooks/` and make it executable to get a reminder to write insights into
+`BRAIN/` during your sessions. Entirely optional.
 
 ## Related Skills
 

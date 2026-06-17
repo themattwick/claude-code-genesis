@@ -31,7 +31,7 @@ Single entry point for everything related to Project BRAIN. Always start with th
 - `brain load` / `brain status` / `brain briefing`
 
 When asked to load state, read the BRAIN/ directory directly:
-1. Find the latest file in `BRAIN/handoffs/` or any `*HANDOFF*.md` in root
+1. Find the latest file in `BRAIN/handoffs/`
 2. List recent files in `BRAIN/checkpoints/`
 3. List recent files in `BRAIN/decisions/`
 4. List recent files in `BRAIN/bugs/`

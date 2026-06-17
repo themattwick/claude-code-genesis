@@ -1,7 +1,7 @@
 # Checkpoint — [Short Title]
 
 **Time:** YYYY-MM-DD HH:MM  
-**Session / Operation:** [e.g. Operation Tree-Sitter Dominance - Phase 2]  
+**Session / Operation:** [e.g. Auth refactor - Phase 2]  
 **Current Focus:** [What you are working on right now]  
 **Todo Status:** [Link to current todo list or 1-sentence summary]
 

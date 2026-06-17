@@ -8,9 +8,9 @@
 [Clear description of the failing / missing behavior]
 
 ## Reproduction / Evidence
-- File: `path/to/file.sql` (or debug_*.py)
+- File: `path/to/file.ext`
 - Specific code snippet or node type
-- Line references in the current implementation: `tree_sitter_visitor.py:1234`
+- Line references in the current implementation: `src/module.ext:123`
 
 ## Root Cause Analysis
 [Why it happens — point to specific functions, missing cases, grammar limitations, etc.]
@@ -28,7 +28,7 @@
 - [ ] Proposal written
 - [ ] Implemented
 - [ ] Test added
-- [ ] Verified on real corpus
+- [ ] Verified on real data
 
 ---
 **Tip:** These entries are the best ammunition you can leave for the other model. Be specific with paths and line numbers.

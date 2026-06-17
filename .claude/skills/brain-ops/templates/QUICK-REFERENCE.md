@@ -6,13 +6,13 @@
 "Create a checkpoint for what I just did"
 
 **Before switching to the other model:**
-"Prepare a proper handoff for Claude/Grok tomorrow morning, including final report"
+"Prepare a proper handoff for the next model/session, including a final summary"
 
 **After messy debugging or exploration:**
 "Help me turn the last 2 hours of work into good decisions/ and bugs/ entries"
 
 **At the end of a big session:**
-"Generate a FINAL_*_REPORT + updated handoff based on all the checkpoints and memory entries"
+"Generate a final session report + updated handoff based on all the checkpoints and memory entries"
 
 **Health check:**
 "Run a brain hygiene check on the current project"
