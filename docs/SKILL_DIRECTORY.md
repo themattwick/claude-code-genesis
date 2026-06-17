@@ -40,6 +40,13 @@ Complete catalog of all skills in the Genesis hub.
 
 ---
 
+## See It In Action
+
+[`examples/sample-project/`](../examples/sample-project) shows a healthy `BRAIN/`
+after about a week of work — real checkpoints, a decision record, an N+1 bug with
+its extracted learning, and a cross-model handoff. The fastest way to understand
+how the pieces fit together.
+
 ## Roadmap Skills
 
 See [ROADMAP.md](./ROADMAP.md) for planned skills:

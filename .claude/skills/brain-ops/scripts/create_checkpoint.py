@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Simple helper for brain-ops skill.
-Creates a properly named checkpoint file in memory/checkpoints/.
+Creates a properly named checkpoint file in BRAIN/checkpoints/.
 
 Usage:
     python create_checkpoint.py "Short title of what was done"
