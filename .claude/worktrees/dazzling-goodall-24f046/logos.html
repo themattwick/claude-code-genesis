@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logos — Specyfikacja systemu AI</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cat-co:        #3B82F6;
+    --cat-gdzie:     #22C55E;
+    --cat-kiedy:     #EAB308;
+    --cat-kto:       #F97316;
+    --cat-dlaczego:  #EF4444;
+    --cat-jak:       #A855F7;
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --text: #e8eaf0;
+    --text-muted: #8890a8;
+    --radius: 14px;
+    --accent: #3B82F6;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .screen {
+    display: none;
+    width: 100%;
+    max-width: 680px;
+    animation: fadeIn 0.3s ease;
+  }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── WELCOME ── */
+  .welcome-logo {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .welcome-logo .logotype {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #3B82F6, #A855F7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .welcome-logo .tagline {
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-size: 15px;
+  }
+  .welcome-logo .tagline strong {
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 32px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  input[type="text"] { height: 50px; }
+  textarea { min-height: 180px; }
+
+  .field + .field { margin-top: 20px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    padding: 14px 24px;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #3B82F6, #6366F1);
+    color: #fff;
+    width: 100%;
+    margin-top: 24px;
+    font-size: 16px;
+    padding: 16px;
+  }
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text-muted);
+  }
+  .btn-skip {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .btn-next {
+    background: var(--accent);
+    color: #fff;
+    flex: 1;
+  }
+  .btn-export {
+    background: linear-gradient(135deg, #22C55E, #16a34a);
+    color: #fff;
+    padding: 16px 28px;
+    font-size: 16px;
+  }
+  .btn-restart {
+    background: var(--surface2);
+    color: var(--text-muted);
+    padding: 16px 24px;
+    font-size: 15px;
+  }
+
+  /* ── CATEGORY CARD ── */
+  .cat-card {
+    text-align: center;
+    padding: 48px 32px;
+  }
+  .cat-badge {
+    display: inline-block;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    font-size: 28px;
+    line-height: 72px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .cat-name {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .cat-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+  .cat-desc {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 400px;
+    margin: 0 auto 8px;
+    line-height: 1.6;
+  }
+  .cat-timer {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+  .cat-timer span {
+    background: rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: 600;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-header {
+    margin-bottom: 24px;
+  }
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .progress-count {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── QUESTION ── */
+  .cat-pill {
+    display: inline-block;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    margin-bottom: 16px;
+  }
+  .question-text {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+  .answer-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* ── RISK BANNER ── */
+  .risk-banner {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: rgba(234,179,8,0.08);
+    border: 1px solid rgba(234,179,8,0.3);
+    border-radius: 10px;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .risk-banner-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #EAB308;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .risk-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .risk-tag {
+    background: rgba(234,179,8,0.15);
+    border: 1px solid rgba(234,179,8,0.35);
+    color: #fbbf24;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+  }
+  .risk-explain {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* ── RISK in REVIEW ── */
+  .review-item.has-risk {
+    border: 1px solid rgba(234,179,8,0.3);
+  }
+  .review-risk-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .review-risk-tag {
+    background: rgba(234,179,8,0.1);
+    border: 1px solid rgba(234,179,8,0.25);
+    color: #ca8a04;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+  }
+
+  /* ── RISK SUMMARY ── */
+  .risk-summary {
+    background: rgba(234,179,8,0.07);
+    border: 1px solid rgba(234,179,8,0.25);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .risk-summary-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #EAB308;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .risk-summary-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .risk-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .risk-summary-item {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .risk-summary-item strong {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .risk-summary-none {
+    font-size: 13px;
+    color: #22C55E;
+    font-weight: 600;
+  }
+
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  /* ── REVIEW ── */
+  .review-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .review-header h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .review-header p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  .review-category {
+    margin-bottom: 28px;
+  }
+  .review-cat-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .review-item {
+    margin-bottom: 14px;
+    padding: 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+  }
+  .review-q {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .review-a {
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .review-a.skipped {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .review-a.empty {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .review-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  /* ── MATRIX ── */
+  .matrix-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .matrix-header h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .matrix-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  .matrix-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pair-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .pair-card.status-ok       { border-color: rgba(34,197,94,0.25); }
+  .pair-card.status-conflict { border-color: rgba(239,68,68,0.35); }
+  .pair-card.status-incomplete { border-color: rgba(234,179,8,0.3); }
+  .pair-card.status-empty    { border-color: rgba(255,255,255,0.04); opacity: 0.6; }
+
+  .pair-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+  .pair-header:hover { background: rgba(255,255,255,0.03); }
+  .pair-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex: 1;
+  }
+  .pair-status-badge {
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-ok         { background: rgba(34,197,94,0.15);  color: #22C55E; }
+  .badge-conflict   { background: rgba(239,68,68,0.15);  color: #EF4444; }
+  .badge-incomplete { background: rgba(234,179,8,0.12);  color: #EAB308; }
+  .badge-empty      { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+  .pair-chevron {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .pair-card.open .pair-chevron { transform: rotate(180deg); }
+
+  .pair-body {
+    display: none;
+    padding: 0 16px 16px;
+  }
+  .pair-card.open .pair-body { display: block; }
+
+  .pair-sides {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 540px) {
+    .pair-sides { grid-template-columns: 1fr; }
+  }
+  .pair-side {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .pair-side-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 4px;
+  }
+  .pair-side-q {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .pair-side-a {
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .pair-side-a.empty { color: var(--text-muted); font-style: italic; }
+
+  .pair-conflict-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #fca5a5;
+    line-height: 1.5;
+  }
+  .pair-conflict-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .conflict-word-tag {
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+  }
+  .matrix-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  /* ── DONE ── */
+  .done-screen {
+    text-align: center;
+    padding: 48px 32px;
+  }
+  .done-screen .icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+  }
+  .done-screen h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .done-screen p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+
+  /* ── RESUME BANNER ── */
+  .resume-banner {
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .resume-banner p {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    min-width: 200px;
+  }
+  .resume-banner .btn { padding: 8px 16px; font-size: 13px; }
+
+  @media (max-width: 500px) {
+    .card { padding: 20px; }
+    .question-text { font-size: 18px; }
+    .welcome-logo .logotype { font-size: 40px; }
+    .nav-row { flex-wrap: wrap; }
+    .review-actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- EKRAN POWITALNY -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-logo">
+    <div class="logotype">Logos</div>
+    <div class="tagline">Kompletna specyfikacja systemu AI w <strong>60 minut</strong></div>
+  </div>
+  <div class="card">
+    <div id="resume-banner" class="resume-banner" style="display:none">
+      <p>Znaleziono poprzednią sesję. Chcesz ją wznowić?</p>
+      <button class="btn btn-primary" style="width:auto;margin-top:0" onclick="resumeSession()">Wznów</button>
+      <button class="btn btn-ghost" onclick="clearResume()">Zacznij od nowa</button>
+    </div>
+    <div class="field">
+      <label for="inp-name">Nazwa systemu</label>
+      <input type="text" id="inp-name" placeholder="np. System zarządzania zamówieniami" maxlength="80">
+    </div>
+    <div class="field">
+      <label for="inp-desc">Krótki opis (jednozdaniowy)</label>
+      <input type="text" id="inp-desc" placeholder="np. Platforma B2B do obsługi zamówień hurtowych" maxlength="200">
+    </div>
+    <button class="btn btn-primary" onclick="startSession()">Rozpocznij specyfikację &rarr;</button>
+  </div>
+</div>
+
+<!-- EKRAN KATEGORII -->
+<div id="screen-category" class="screen">
+  <div class="card cat-card">
+    <div id="cat-badge" class="cat-badge"></div>
+    <div id="cat-name" class="cat-name"></div>
+    <div id="cat-sub" class="cat-sub"></div>
+    <div id="cat-desc" class="cat-desc"></div>
+    <div class="cat-timer"><span>~10 minut · 10 pytań</span></div>
+    <button class="btn btn-next" style="max-width:240px;margin:0 auto" onclick="startCategory()">Zaczynamy &rarr;</button>
+  </div>
+</div>
+
+<!-- EKRAN PYTANIA -->
+<div id="screen-question" class="screen">
+  <div class="progress-header">
+    <div class="progress-row">
+      <span class="progress-label" id="prog-cat-label"></span>
+      <span class="progress-count" id="prog-cat-count"></span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-cat-bar"></div>
+    </div>
+    <div class="progress-row" style="margin-top:10px">
+      <span class="progress-label">Łączny postęp</span>
+      <span class="progress-count" id="prog-total-count"></span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-total-bar" style="background:rgba(255,255,255,0.15)"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="q-pill" class="cat-pill"></div>
+    <div id="q-text" class="question-text"></div>
+    <textarea id="q-answer" placeholder="Wpisz odpowiedź lub pomiń pytanie..."></textarea>
+    <div id="q-risk-banner" class="risk-banner">
+      <div class="risk-banner-title">⚠ Wykryto ukryte założenia</div>
+      <div class="risk-tags" id="q-risk-tags"></div>
+      <div class="risk-explain">Te słowa mogą maskować nieokreślone przypadki brzegowe. Rozważ ich doprecyzowanie.</div>
+    </div>
+    <div class="answer-hint">Wskazówka: jeśli nie wiesz — to właśnie to pytanie jest najważniejsze.</div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goBack()">&#8592; Wstecz</button>
+      <button class="btn btn-skip" onclick="skipQuestion()">Pomiń</button>
+      <button class="btn btn-next" onclick="nextQuestion()">Dalej &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- EKRAN PRZEGLĄDU -->
+<div id="screen-review" class="screen">
+  <div class="review-header">
+    <h2>Przegląd specyfikacji</h2>
+    <p id="review-subtitle"></p>
+  </div>
+  <div id="review-body"></div>
+  <div class="review-actions">
+    <button class="btn btn-export" onclick="exportMarkdown()">&#8595; Pobierz specyfikację (.md)</button>
+    <button class="btn" style="background:#6366F1;color:#fff;padding:16px 24px;font-size:15px" onclick="showMatrix()">&#9783; Macierz spójności</button>
+    <button class="btn btn-restart" onclick="goToWelcome()">Nowa sesja</button>
+  </div>
+</div>
+
+<!-- EKRAN MACIERZY -->
+<div id="screen-matrix" class="screen">
+  <div class="matrix-header">
+    <h2>Macierz spójności</h2>
+    <p>Powiązane pytania z różnych kategorii zestawione parami. Sprawdź, czy odpowiedzi są ze sobą logicznie zgodne.</p>
+  </div>
+  <div class="matrix-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div> Spójne</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div> Możliwa sprzeczność</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#EAB308"></div> Niekompletna para</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#444"></div> Brak danych</div>
+  </div>
+  <div id="matrix-body"></div>
+  <div class="matrix-actions">
+    <button class="btn btn-export" onclick="exportMarkdown()">&#8595; Pobierz specyfikację (.md)</button>
+    <button class="btn btn-restart" style="background:var(--surface2);color:var(--text-muted);padding:16px 24px" onclick="showReview()">&#8592; Wróć do przeglądu</button>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  {
+    id: 'co',
+    name: 'CO',
+    sub: 'WHAT — Czym jest system',
+    emoji: '🔵',
+    color: '#3B82F6',
+    desc: 'Zdefiniuj, co istnieje w systemie, jakie informacje są wymagane i jakie zmiany są dozwolone.',
+    questions: [
+      'Co robi system?',
+      'Jakie są główne elementy systemu?',
+      'Co może istnieć w systemie?',
+      'Czego nie może być w systemie?',
+      'Jakie informacje muszą zawsze być obecne?',
+      'Jakie informacje są opcjonalne?',
+      'W jakich stanach może znajdować się każdy element?',
+      'Jakie zmiany są dozwolone?',
+      'Jakich zmian nie wolno dokonywać?',
+      'Czego nigdy nie należy przechowywać?',
+    ],
+  },
+  {
+    id: 'gdzie',
+    name: 'GDZIE',
+    sub: 'WHERE — Gdzie to się dzieje',
+    emoji: '🟢',
+    color: '#22C55E',
+    desc: 'Ustal granice dostępu, przepływ danych oraz miejsca, gdzie zachowanie systemu jest różne.',
+    questions: [
+      'Skąd można uzyskać dostęp do systemu?',
+      'Gdzie wykonywane są działania (użytkownik vs system)?',
+      'Gdzie mogą trafiać dane?',
+      'Gdzie dane NIE mogą trafiać?',
+      'Gdzie są granice systemu?',
+      'Gdzie łączą się systemy zewnętrzne?',
+      'Gdzie dostęp jest ograniczony?',
+      'Gdzie mogą wystąpić awarie?',
+      'Gdzie system musi zawsze odpowiadać?',
+      'Gdzie zachowanie różni się w zależności od lokalizacji?',
+    ],
+  },
+  {
+    id: 'kiedy',
+    name: 'KIEDY',
+    sub: 'WHEN — Kiedy to się dzieje',
+    emoji: '🟡',
+    color: '#EAB308',
+    desc: 'Określ wyzwalacze tworzenia, aktualizacji, usuwania, czas odpowiedzi i reguły wygasania.',
+    questions: [
+      'Kiedy coś jest tworzone?',
+      'Kiedy coś jest aktualizowane?',
+      'Kiedy coś jest usuwane?',
+      'Kiedy rozpoczyna się proces?',
+      'Kiedy kończy się proces?',
+      'Kiedy system musi odpowiedzieć natychmiast?',
+      'Kiedy może odpowiedzieć później?',
+      'Kiedy system powinien ponowić próbę?',
+      'Kiedy system powinien blokować działania?',
+      'Kiedy coś wygasa?',
+    ],
+  },
+  {
+    id: 'kto',
+    name: 'KTO',
+    sub: 'WHO — Kto może działać',
+    emoji: '🟠',
+    color: '#F97316',
+    desc: 'Zdefiniuj role użytkowników, uprawnienia, kto zatwierdza akcje i kto nie ma dostępu.',
+    questions: [
+      'Kto może korzystać z systemu?',
+      'Kto może zobaczyć co?',
+      'Kto może tworzyć elementy?',
+      'Kto może aktualizować elementy?',
+      'Kto może usuwać elementy?',
+      'Kto nie ma dostępu do określonych danych?',
+      'Kto zatwierdza ważne działania?',
+      'Kto wyzwala kluczowe zdarzenia?',
+      'Kto jest odpowiedzialny za działania?',
+      'Komu nigdy nie wolno działać?',
+    ],
+  },
+  {
+    id: 'dlaczego',
+    name: 'DLACZEGO',
+    sub: 'WHY — Dlaczego reguły istnieją',
+    emoji: '🔴',
+    color: '#EF4444',
+    desc: 'Uzasadnij każdą funkcję, ograniczenie i regułę — brak uzasadnienia to ukryte ryzyko.',
+    questions: [
+      'Dlaczego ten system istnieje?',
+      'Dlaczego każda funkcja istnieje?',
+      'Dlaczego określone działania są dozwolone?',
+      'Dlaczego określone działania są blokowane?',
+      'Dlaczego część danych jest objęta ograniczeniami?',
+      'Dlaczego walidacje są potrzebne?',
+      'Dlaczego czas ma znaczenie?',
+      'Dlaczego część działań jest nieodwracalna?',
+      'Dlaczego te ograniczenia są egzekwowane?',
+      'Dlaczego system powinien zgłaszać błąd zamiast zgadywać?',
+    ],
+  },
+  {
+    id: 'jak',
+    name: 'JAK',
+    sub: 'HOW — Jak system się zachowuje',
+    emoji: '🟣',
+    color: '#A855F7',
+    desc: 'Opisz reakcje systemu, obsługę błędów, odporność na awarie i spójność pod obciążeniem.',
+    questions: [
+      'Jak system reaguje na działania użytkownika?',
+      'Jak zachowuje się, gdy brakuje danych?',
+      'Jak obsługuje nieprawidłowe dane wejściowe?',
+      'Jak obsługuje błędy?',
+      'Jak zachowuje się, gdy coś zawiedzie?',
+      'Jak odzyskuje sprawność po awarii?',
+      'Jak egzekwuje reguły?',
+      'Jak zapobiega nieoczekiwanemu zachowaniu?',
+      'Jak zachowuje się pod obciążeniem?',
+      'Jak utrzymuje spójność?',
+    ],
+  },
+];
+
+// ── Risky words ──
+const RISKY_WORDS = [
+  // Fałszywe kwantyfikatory
+  { word: 'zawsze',            why: 'fałszywy absolut — co jeśli nie?' },
+  { word: 'nigdy',             why: 'fałszywy absolut — czy na pewno bez wyjątku?' },
+  { word: 'wszyscy',           why: 'czy naprawdę każdy użytkownik?' },
+  { word: 'wszędzie',          why: 'czy naprawdę każda lokalizacja?' },
+  // Niepewność
+  { word: 'prawdopodobnie',    why: 'niepewność — specyfikacja powinna być pewna' },
+  { word: 'raczej',            why: 'nieokreśloność — co dokładnie?' },
+  { word: 'podobno',           why: 'brak potwierdzenia — sprawdź źródło' },
+  { word: 'chyba że',          why: 'ukryty wyjątek — zdefiniuj go explicite' },
+  { word: 'niekoniecznie',     why: 'niejasna reguła — kiedy tak, kiedy nie?' },
+  { word: 'ewentualnie',       why: 'możliwość nieuwzględniona — kiedy konkretnie?' },
+  // Nieokreśloność
+  { word: 'mniej więcej',      why: 'brak precyzji — podaj konkretną wartość' },
+  { word: 'jakoś',             why: 'nieokreślony mechanizm — opisz jak dokładnie' },
+  { word: 'ktoś',              why: 'nieokreślona rola — kto konkretnie?' },
+  { word: 'gdzieś',            why: 'nieokreślone miejsce — gdzie dokładnie?' },
+  { word: 'kiedyś',            why: 'nieokreślony czas — kiedy dokładnie?' },
+  { word: 'jakoś',             why: 'nieokreślony sposób — opisz mechanizm' },
+  { word: 'w razie czego',     why: 'nieokreślony przypadek — opisz go konkretnie' },
+  { word: 'w razie potrzeby',  why: 'nieokreślony trigger — co definiuje potrzebę?' },
+  { word: 'w miarę możliwości',why: 'brak zobowiązania — kiedy tak, kiedy nie?' },
+  // Ukryta logika
+  { word: 'automatycznie',     why: 'ukryta logika — kto/co wyzwala tę akcję?' },
+  { word: 'zazwyczaj',         why: 'ukryty wyjątek — opisz kiedy inaczej' },
+  { word: 'zwykle',            why: 'ukryty wyjątek — opisz kiedy inaczej' },
+  { word: 'na ogół',           why: 'ukryty wyjątek — opisz kiedy inaczej' },
+  { word: 'z reguły',          why: 'ukryty wyjątek — opisz kiedy inaczej' },
+  { word: 'generalnie',        why: 'ukryty wyjątek — opisz kiedy inaczej' },
+  { word: 'przeważnie',        why: 'ukryty wyjątek — co z pozostałymi przypadkami?' },
+  { word: 'często',            why: 'ukryty wyjątek — co gdy nie często?' },
+  { word: 'czasem',            why: 'nieokreślona częstotliwość — kiedy konkretnie?' },
+  { word: 'czasami',           why: 'nieokreślona częstotliwość — kiedy konkretnie?' },
+  { word: 'niekiedy',          why: 'nieokreślona częstotliwość — kiedy konkretnie?' },
+  { word: 'zależy',            why: 'nieokreślona zależność — od czego dokładnie?' },
+  // Pozorna precyzja
+  { word: 'właściwie',         why: 'rozmyta precyzja — co dokładnie masz na myśli?' },
+  { word: 'w zasadzie',        why: 'rozmyta precyzja — co dokładnie masz na myśli?' },
+  { word: 'zasadniczo',        why: 'rozmyta precyzja — co dokładnie masz na myśli?' },
+  { word: 'teoretycznie',      why: 'sugeruje wyjątek praktyczny — opisz go' },
+  { word: 'praktycznie',       why: 'sugeruje wyjątek teoretyczny — opisz go' },
+];
+
+function detectRiskyWords(text) {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const found = [];
+  const seen = new Set();
+  for (const entry of RISKY_WORDS) {
+    if (!seen.has(entry.word) && lower.includes(entry.word)) {
+      found.push(entry);
+      seen.add(entry.word);
+    }
+  }
+  return found;
+}
+
+// Flatten questions with global index
+const ALL_QUESTIONS = [];
+CATEGORIES.forEach((cat, ci) => {
+  cat.questions.forEach((q, qi) => {
+    ALL_QUESTIONS.push({ cat: ci, qi, text: q });
+  });
+});
+
+// State
+let state = {
+  systemName: '',
+  description: '',
+  answers: new Array(60).fill(null), // null=unanswered, ''=skipped, string=answered
+  currentQ: 0,
+  phase: 'welcome', // welcome | category | question | review
+};
+
+// ── Persistence ──
+function saveState() {
+  localStorage.setItem('logos_state', JSON.stringify(state));
+}
+function loadSavedState() {
+  try {
+    const raw = localStorage.getItem('logos_state');
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (s.systemName && s.answers && s.answers.length === 60) return s;
+  } catch {}
+  return null;
+}
+
+// ── Screens ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ── Welcome ──
+window.onload = () => {
+  const saved = loadSavedState();
+  if (saved && saved.systemName) {
+    document.getElementById('resume-banner').style.display = 'flex';
+  }
+};
+
+function resumeSession() {
+  const saved = loadSavedState();
+  if (!saved) return;
+  state = saved;
+  document.getElementById('inp-name').value = state.systemName;
+  document.getElementById('inp-desc').value = state.description;
+  if (state.phase === 'review') {
+    showReview();
+  } else {
+    showQuestionScreen(state.currentQ);
+  }
+}
+
+function clearResume() {
+  localStorage.removeItem('logos_state');
+  document.getElementById('resume-banner').style.display = 'none';
+}
+
+function startSession() {
+  const name = document.getElementById('inp-name').value.trim();
+  const desc = document.getElementById('inp-desc').value.trim();
+  if (!name) {
+    document.getElementById('inp-name').focus();
+    document.getElementById('inp-name').style.borderColor = '#EF4444';
+    setTimeout(() => document.getElementById('inp-name').style.borderColor = '', 1500);
+    return;
+  }
+  state.systemName = name;
+  state.description = desc;
+  state.answers = new Array(60).fill(null);
+  state.currentQ = 0;
+  state.phase = 'category';
+  saveState();
+  showCategoryIntro(0);
+}
+
+function goToWelcome() {
+  localStorage.removeItem('logos_state');
+  state = { systemName:'', description:'', answers: new Array(60).fill(null), currentQ:0, phase:'welcome' };
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('resume-banner').style.display = 'none';
+  showScreen('welcome');
+}
+
+// ── Category intro ──
+function showCategoryIntro(catIndex) {
+  const cat = CATEGORIES[catIndex];
+  document.getElementById('cat-badge').textContent = cat.emoji;
+  document.getElementById('cat-badge').style.background = cat.color + '22';
+  document.getElementById('cat-name').textContent = cat.name;
+  document.getElementById('cat-name').style.color = cat.color;
+  document.getElementById('cat-sub').textContent = cat.sub;
+  document.getElementById('cat-desc').textContent = cat.desc;
+  state.phase = 'category';
+  state._pendingCat = catIndex;
+  saveState();
+  showScreen('category');
+}
+
+function startCategory() {
+  const startQ = state._pendingCat * 10;
+  showQuestionScreen(startQ);
+}
+
+// ── Question ──
+function showQuestionScreen(qIndex) {
+  if (qIndex >= 60) {
+    showReview();
+    return;
+  }
+
+  // Show category intro if crossing into a new category
+  const catIndex = Math.floor(qIndex / 10);
+  const prevCatIndex = state.currentQ !== undefined ? Math.floor(state.currentQ / 10) : -1;
+  state.currentQ = qIndex;
+
+  if (qIndex % 10 === 0 && qIndex !== 0 && catIndex !== prevCatIndex && state.phase !== 'category') {
+    showCategoryIntro(catIndex);
+    return;
+  }
+
+  state.phase = 'question';
+  saveState();
+
+  const qData = ALL_QUESTIONS[qIndex];
+  const cat = CATEGORIES[qData.cat];
+  const localNum = qData.qi + 1;
+
+  // Progress
+  const catFill = (localNum / 10) * 100;
+  const totalFill = ((qIndex) / 60) * 100;
+  document.getElementById('prog-cat-label').textContent = cat.name + ' — питання';
+  document.getElementById('prog-cat-label').textContent = cat.name + ' — pytanie';
+  document.getElementById('prog-cat-count').textContent = localNum + ' / 10';
+  document.getElementById('prog-cat-bar').style.width = catFill + '%';
+  document.getElementById('prog-cat-bar').style.background = cat.color;
+  document.getElementById('prog-total-count').textContent = (qIndex + 1) + ' / 60';
+  document.getElementById('prog-total-bar').style.width = totalFill + '%';
+
+  // Pill
+  const pill = document.getElementById('q-pill');
+  pill.textContent = 'P' + (qIndex + 1) + ' · ' + cat.name;
+  pill.style.background = cat.color + '22';
+  pill.style.color = cat.color;
+
+  document.getElementById('q-text').textContent = qData.text;
+
+  const ta = document.getElementById('q-answer');
+  const saved = state.answers[qIndex];
+  ta.value = (saved !== null && saved !== '') ? saved : '';
+  ta.placeholder = 'Wpisz odpowiedź lub pomiń pytanie...';
+  ta.focus();
+
+  // Wstecz visibility
+  document.querySelector('.btn-ghost').style.visibility = qIndex > 0 ? 'visible' : 'hidden';
+
+  showScreen('question');
+
+  // Risk detection + auto-save on type
+  const riskBanner = document.getElementById('q-risk-banner');
+  const riskTagsEl = document.getElementById('q-risk-tags');
+
+  function updateRisk() {
+    const hits = detectRiskyWords(ta.value);
+    if (hits.length > 0) {
+      riskTagsEl.innerHTML = hits.map(h =>
+        `<span class="risk-tag" title="${h.why}">${h.word}</span>`
+      ).join('');
+      riskBanner.style.display = 'block';
+    } else {
+      riskBanner.style.display = 'none';
+    }
+  }
+
+  // Show risk for pre-filled answer (resume)
+  updateRisk();
+
+  ta.oninput = () => {
+    state.answers[qIndex] = ta.value;
+    saveState();
+    updateRisk();
+  };
+}
+
+function nextQuestion() {
+  const ta = document.getElementById('q-answer');
+  const val = ta.value.trim();
+  state.answers[state.currentQ] = val || null; // null if empty (not explicitly skipped)
+  if (val) state.answers[state.currentQ] = val;
+  saveState();
+
+  const next = state.currentQ + 1;
+  const curCat = Math.floor(state.currentQ / 10);
+  const nextCat = Math.floor(next / 10);
+
+  if (next >= 60) {
+    showReview();
+    return;
+  }
+
+  if (nextCat > curCat) {
+    state.currentQ = next;
+    saveState();
+    showCategoryIntro(nextCat);
+  } else {
+    showQuestionScreen(next);
+  }
+}
+
+function skipQuestion() {
+  state.answers[state.currentQ] = ''; // explicitly skipped
+  saveState();
+  const next = state.currentQ + 1;
+  const curCat = Math.floor(state.currentQ / 10);
+  const nextCat = Math.floor(next / 10);
+
+  if (next >= 60) {
+    showReview();
+    return;
+  }
+
+  if (nextCat > curCat) {
+    state.currentQ = next;
+    saveState();
+    showCategoryIntro(nextCat);
+  } else {
+    showQuestionScreen(next);
+  }
+}
+
+function goBack() {
+  if (state.currentQ <= 0) return;
+  const prev = state.currentQ - 1;
+  state.currentQ = prev;
+  saveState();
+  showQuestionScreen(prev);
+}
+
+// ── Review ──
+function showReview() {
+  state.phase = 'review';
+  saveState();
+
+  document.getElementById('review-subtitle').textContent =
+    state.systemName + ' — ' + countAnswered() + ' z 60 pytań udzielono odpowiedzi';
+
+  const body = document.getElementById('review-body');
+  body.innerHTML = '';
+
+  // Collect all flagged questions
+  const flagged = [];
+  CATEGORIES.forEach((cat, ci) => {
+    cat.questions.forEach((q, qi) => {
+      const globalIdx = ci * 10 + qi;
+      const ans = state.answers[globalIdx];
+      if (ans && ans !== '') {
+        const hits = detectRiskyWords(ans);
+        if (hits.length > 0) flagged.push({ globalIdx, q, hits });
+      }
+    });
+  });
+
+  // Risk summary card
+  const summary = document.createElement('div');
+  summary.className = 'risk-summary';
+  if (flagged.length === 0) {
+    summary.innerHTML = `
+      <div class="risk-summary-title">✓ Brak wykrytych ukrytych założeń</div>
+      <div class="risk-summary-none">Żadna odpowiedź nie zawiera słów wskazujących na niejednoznaczność.</div>`;
+  } else {
+    const listHTML = flagged.map(f =>
+      `<div class="risk-summary-item">
+        <strong>P${f.globalIdx + 1}</strong>
+        <span>${f.q} &mdash; ${f.hits.map(h => `<span class="review-risk-tag">${h.word}</span>`).join(' ')}</span>
+      </div>`
+    ).join('');
+    summary.innerHTML = `
+      <div class="risk-summary-title">⚠ Wykryto ukryte założenia w ${flagged.length} odpowiedzi${flagged.length === 1 ? '' : (flagged.length < 5 ? 'ach' : 'ach')}</div>
+      <div class="risk-summary-sub">Poniższe odpowiedzi zawierają słowa, które mogą maskować nieokreślone przypadki brzegowe.</div>
+      <div class="risk-summary-list">${listHTML}</div>`;
+  }
+  body.appendChild(summary);
+
+  // Per-category sections
+  CATEGORIES.forEach((cat, ci) => {
+    const section = document.createElement('div');
+    section.className = 'review-category';
+
+    const title = document.createElement('div');
+    title.className = 'review-cat-title';
+    title.style.color = cat.color;
+    title.textContent = cat.name + ' — ' + cat.sub;
+    section.appendChild(title);
+
+    cat.questions.forEach((q, qi) => {
+      const globalIdx = ci * 10 + qi;
+      const ans = state.answers[globalIdx];
+      const item = document.createElement('div');
+      item.className = 'review-item';
+
+      const qEl = document.createElement('div');
+      qEl.className = 'review-q';
+      qEl.textContent = 'P' + (globalIdx + 1) + ': ' + q;
+
+      const aEl = document.createElement('div');
+      aEl.className = 'review-a';
+      if (ans === null || ans === undefined) {
+        aEl.textContent = '— bez odpowiedzi';
+        aEl.classList.add('empty');
+      } else if (ans === '') {
+        aEl.textContent = 'Pominięto';
+        aEl.classList.add('skipped');
+      } else {
+        aEl.textContent = ans;
+        // Flag risky words
+        const hits = detectRiskyWords(ans);
+        if (hits.length > 0) {
+          item.classList.add('has-risk');
+          const tagsEl = document.createElement('div');
+          tagsEl.className = 'review-risk-tags';
+          tagsEl.innerHTML = hits.map(h =>
+            `<span class="review-risk-tag" title="${h.why}">⚠ ${h.word}</span>`
+          ).join('');
+          item.appendChild(qEl);
+          item.appendChild(aEl);
+          item.appendChild(tagsEl);
+          section.appendChild(item);
+          return;
+        }
+      }
+
+      item.appendChild(qEl);
+      item.appendChild(aEl);
+      section.appendChild(item);
+    });
+
+    body.appendChild(section);
+  });
+
+  showScreen('review');
+}
+
+function countAnswered() {
+  return state.answers.filter(a => a !== null && a !== '' && a !== undefined).length;
+}
+
+// ── Markdown export ──
+function exportMarkdown() {
+  const date = new Date().toLocaleDateString('pl-PL', { year:'numeric', month:'long', day:'numeric' });
+  let md = `# ${state.systemName} — Specyfikacja Logos\n`;
+  md += `Wygenerowano: ${date}\n\n`;
+  if (state.description) {
+    md += `## Opis systemu\n${state.description}\n\n`;
+    md += `---\n\n`;
+  }
+
+  CATEGORIES.forEach((cat, ci) => {
+    md += `## ${cat.name} — ${cat.sub}\n\n`;
+    cat.questions.forEach((q, qi) => {
+      const globalIdx = ci * 10 + qi;
+      const ans = state.answers[globalIdx];
+      md += `### P${globalIdx + 1}: ${q}\n`;
+      if (ans === null || ans === undefined) {
+        md += `_Bez odpowiedzi_\n`;
+      } else if (ans === '') {
+        md += `_Pominięto_\n`;
+      } else {
+        md += `${ans}\n`;
+        const hits = detectRiskyWords(ans);
+        if (hits.length > 0) {
+          md += `\n> ⚠ **Ukryte założenia:** ${hits.map(h => `\`${h.word}\``).join(', ')} — rozważ doprecyzowanie.\n`;
+        }
+      }
+      md += '\n';
+    });
+    md += '---\n\n';
+  });
+
+  const slug = state.systemName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const filename = (slug || 'system') + '-logos.md';
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Consistency Matrix ──
+
+// Global question index: CO=0-9, GDZIE=10-19, KIEDY=20-29, KTO=30-39, DLACZEGO=40-49, JAK=50-59
+const CONSISTENCY_PAIRS = [
+  {
+    title: 'Zmiany dozwolone vs zakazane',
+    a: 7,  // CO-8: Jakie zmiany są dozwolone?
+    b: 8,  // CO-9: Jakich zmian nie wolno dokonywać?
+    type: 'opposite',
+    note: 'Ta sama operacja nie może być jednocześnie dozwolona i zakazana.',
+  },
+  {
+    title: 'Informacje wymagane vs opcjonalne',
+    a: 4,  // CO-5: Jakie informacje muszą zawsze być obecne?
+    b: 5,  // CO-6: Jakie informacje są opcjonalne?
+    type: 'opposite',
+    note: 'To samo pole nie powinno być jednocześnie wymagane i opcjonalne.',
+  },
+  {
+    title: 'Przepływ danych: dozwolony vs zabroniony',
+    a: 12, // GDZIE-3: Gdzie mogą trafiać dane?
+    b: 13, // GDZIE-4: Gdzie dane NIE mogą trafiać?
+    type: 'opposite',
+    note: 'Ten sam cel docelowy nie może być jednocześnie dozwolony i zabroniony.',
+  },
+  {
+    title: 'Kto używa systemu ↔ Skąd ma dostęp',
+    a: 30, // KTO-1: Kto może korzystać z systemu?
+    b: 10, // GDZIE-1: Skąd można uzyskać dostęp do systemu?
+    type: 'complement',
+    note: 'Każda rola użytkownika powinna mieć zdefiniowany punkt dostępu i odwrotnie.',
+  },
+  {
+    title: 'Kto tworzy ↔ Kiedy coś jest tworzone',
+    a: 32, // KTO-3: Kto może tworzyć elementy?
+    b: 20, // KIEDY-1: Kiedy coś jest tworzone?
+    type: 'complement',
+    note: 'Aktor tworzący i wyzwalacz tworzenia powinny być oba zdefiniowane.',
+  },
+  {
+    title: 'Kto aktualizuje ↔ Kiedy aktualizowane',
+    a: 33, // KTO-4: Kto może aktualizować elementy?
+    b: 21, // KIEDY-2: Kiedy coś jest aktualizowane?
+    type: 'complement',
+    note: 'Aktor aktualizujący i wyzwalacz aktualizacji powinny być oba zdefiniowane.',
+  },
+  {
+    title: 'Kto usuwa ↔ Kiedy usuwane',
+    a: 34, // KTO-5: Kto może usuwać elementy?
+    b: 22, // KIEDY-3: Kiedy coś jest usuwane?
+    type: 'complement',
+    note: 'Aktor usuwający i wyzwalacz usunięcia powinny być oba zdefiniowane.',
+  },
+  {
+    title: 'Kto usuwa ↔ Dlaczego nieodwracalne',
+    a: 34, // KTO-5: Kto może usuwać?
+    b: 47, // DLACZEGO-8: Dlaczego część działań jest nieodwracalna?
+    type: 'complement',
+    note: 'Jeśli usuwanie jest możliwe, powinno być jasne czy jest odwracalne i dlaczego.',
+  },
+  {
+    title: 'Kto zatwierdza ↔ Dlaczego nieodwracalne',
+    a: 36, // KTO-7: Kto zatwierdza ważne działania?
+    b: 47, // DLACZEGO-8: Dlaczego część działań jest nieodwracalna?
+    type: 'complement',
+    note: 'Działania nieodwracalne powinny mieć zdefiniowany proces zatwierdzania.',
+  },
+  {
+    title: 'Gdzie ograniczony dostęp ↔ Kto nie ma dostępu',
+    a: 16, // GDZIE-7: Gdzie dostęp jest ograniczony?
+    b: 35, // KTO-6: Kto nie ma dostępu do określonych danych?
+    type: 'complement',
+    note: 'Miejsce ograniczenia i wykluczone role powinny wzajemnie się potwierdzać.',
+  },
+  {
+    title: 'Kiedy odpowiedź natychmiast ↔ Jak system reaguje',
+    a: 25, // KIEDY-6: Kiedy system musi odpowiedzieć natychmiast?
+    b: 50, // JAK-1: Jak system reaguje na działania użytkownika?
+    type: 'complement',
+    note: 'Sytuacje wymagające natychmiastowej odpowiedzi powinny być opisane w mechanizmie reakcji.',
+  },
+  {
+    title: 'Kiedy retry ↔ Jak odzyskuje po awarii',
+    a: 27, // KIEDY-8: Kiedy system powinien ponowić próbę?
+    b: 55, // JAK-6: Jak odzyskuje sprawność po awarii?
+    type: 'complement',
+    note: 'Warunek ponowienia próby i mechanizm recovery powinny być ze sobą zgodne.',
+  },
+  {
+    title: 'Czego nie może być ↔ Dlaczego blokowane',
+    a: 3,  // CO-4: Czego nie może być w systemie?
+    b: 43, // DLACZEGO-4: Dlaczego określone działania są blokowane?
+    type: 'complement',
+    note: 'Każde ograniczenie powinno mieć swoje uzasadnienie.',
+  },
+  {
+    title: 'Jak obsługuje błędy ↔ Gdzie mogą wystąpić awarie',
+    a: 53, // JAK-4: Jak obsługuje błędy?
+    b: 17, // GDZIE-8: Gdzie mogą wystąpić awarie?
+    type: 'complement',
+    note: 'Mechanizm obsługi błędów powinien obejmować wszystkie zidentyfikowane miejsca awarii.',
+  },
+  {
+    title: 'Stany elementów ↔ Kiedy coś jest tworzone',
+    a: 6,  // CO-7: W jakich stanach może znajdować się każdy element?
+    b: 20, // KIEDY-1: Kiedy coś jest tworzone?
+    type: 'complement',
+    note: 'Lista stanów powinna zawierać stan "nowy/tworzony" odpowiadający wyzwalaczowi tworzenia.',
+  },
+];
+
+const STOP_WORDS = new Set([
+  'jest','są','może','tego','tych','które','który','która','przez','oraz',
+  'jako','lub','ale','nie','tak','czy','jak','gdy','się','być','musi',
+  'można','dla','przy','pod','nad','przed','każdy','każda','każde',
+  'wszystkie','wszystko','temu','tym','jego','jej','ich','gdzie','kiedy',
+  'kto','dlaczego','system','systemu','systemie','dane','danych',
+]);
+
+function significantWords(text) {
+  return text.toLowerCase()
+    .split(/\W+/)
+    .filter(w => w.length > 4 && !STOP_WORDS.has(w));
+}
+
+function checkPair(idxA, idxB, type) {
+  const ansA = state.answers[idxA];
+  const ansB = state.answers[idxB];
+  const aFilled = ansA && ansA !== '';
+  const bFilled = ansB && ansB !== '';
+
+  if (!aFilled && !bFilled) return { status: 'empty', overlap: [] };
+  if (!aFilled || !bFilled) return { status: 'incomplete', overlap: [] };
+
+  if (type === 'opposite') {
+    // Flag words that appear in both answers — same thing listed as both allowed and forbidden
+    const wordsA = new Set(significantWords(ansA));
+    const wordsB = significantWords(ansB);
+    const overlap = wordsB.filter(w => wordsA.has(w));
+    if (overlap.length > 0) return { status: 'conflict', overlap };
+  }
+
+  return { status: 'ok', overlap: [] };
+}
+
+function showMatrix() {
+  const body = document.getElementById('matrix-body');
+  body.innerHTML = '';
+
+  CONSISTENCY_PAIRS.forEach((pair, i) => {
+    const { status, overlap } = checkPair(pair.a, pair.b, pair.type);
+    const ansA = state.answers[pair.a];
+    const ansB = state.answers[pair.b];
+
+    const qA = ALL_QUESTIONS[pair.a];
+    const qB = ALL_QUESTIONS[pair.b];
+    const catA = CATEGORIES[qA.cat];
+    const catB = CATEGORIES[qB.cat];
+
+    const statusLabel = {
+      ok:         'Spójne',
+      conflict:   'Możliwa sprzeczność',
+      incomplete: 'Niekompletna para',
+      empty:      'Brak danych',
+    }[status];
+    const badgeClass = {
+      ok: 'badge-ok', conflict: 'badge-conflict',
+      incomplete: 'badge-incomplete', empty: 'badge-empty',
+    }[status];
+
+    const card = document.createElement('div');
+    card.className = `pair-card status-${status}`;
+
+    card.innerHTML = `
+      <div class="pair-header" onclick="togglePair(this)">
+        <div class="pair-title">${pair.title}</div>
+        <span class="pair-status-badge ${badgeClass}">${statusLabel}</span>
+        <span class="pair-chevron">▾</span>
+      </div>
+      <div class="pair-body">
+        <div class="pair-sides">
+          <div class="pair-side">
+            <div class="pair-side-label" style="color:${catA.color}">P${pair.a + 1} · ${catA.name}</div>
+            <div class="pair-side-q">${qA.text}</div>
+            <div class="pair-side-a ${!ansA || ansA === '' ? 'empty' : ''}">
+              ${!ansA ? '— bez odpowiedzi' : ansA === '' ? 'Pominięto' : escHtml(ansA)}
+            </div>
+          </div>
+          <div class="pair-side">
+            <div class="pair-side-label" style="color:${catB.color}">P${pair.b + 1} · ${catB.name}</div>
+            <div class="pair-side-q">${qB.text}</div>
+            <div class="pair-side-a ${!ansB || ansB === '' ? 'empty' : ''}">
+              ${!ansB ? '— bez odpowiedzi' : ansB === '' ? 'Pominięto' : escHtml(ansB)}
+            </div>
+          </div>
+        </div>
+        ${status === 'conflict' ? `
+          <div class="pair-conflict-note">
+            <strong>Wykryto możliwą sprzeczność.</strong> ${pair.note}
+            <div class="pair-conflict-words">
+              ${overlap.map(w => `<span class="conflict-word-tag">${w}</span>`).join('')}
+            </div>
+          </div>` : ''}
+        ${status === 'incomplete' ? `
+          <div class="pair-conflict-note" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2);color:#fde68a">
+            ${pair.note}
+          </div>` : ''}
+      </div>`;
+
+    // Auto-open conflicts and incompletes
+    if (status === 'conflict' || status === 'incomplete') {
+      card.classList.add('open');
+    }
+
+    body.appendChild(card);
+  });
+
+  showScreen('matrix');
+}
+
+function togglePair(header) {
+  header.closest('.pair-card').classList.toggle('open');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

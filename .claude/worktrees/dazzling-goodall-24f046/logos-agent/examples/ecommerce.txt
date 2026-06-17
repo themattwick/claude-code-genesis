@@ -1,0 +1,2 @@
+Sklep B2C
+System e-commerce dla sklepu odzieżowego B2C w Polsce z planowaną ekspansją na DE i UK. Klienci rejestrują się, przeglądają katalog, składają zamówienia i płacą przez Stripe. Zamówienia są realizowane przez zewnętrzne WMS, a faktury synchronizowane do SAP. Wymagana zgodność z RODO i ustawą o prawach konsumenta (możliwość anulowania w 14 dni). Cel skali: 10 tys. zamówień dziennie, 99.9% uptime na checkout. Zespół wewnętrzny obsługuje reklamacje przez panel admina dostępny tylko z VPN firmowego. Kluczowe role: Klient, Pracownik obsługi, Administrator.

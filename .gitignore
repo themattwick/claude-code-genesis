@@ -1,0 +1,36 @@
+# Genesis .gitignore
+
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.egg-info/
+
+# Development
+.DS_Store
+*.swp
+*.swo
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/
+*.pyc
+
+# Editor
+.vscode/
+.idea/
+*.sublime-*
+
+# Checkpoints (local only)
+.claude/checkpoints/
+
+# Temporary
+tmp/
+temp/
+*.tmp

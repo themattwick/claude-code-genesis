@@ -1,0 +1,14 @@
+# Wymagania do uruchomienia z dowolnym modelem (bez Google API key)
+# LiteLlm jest wewnątrz google-adk — nie trzeba instalować osobno
+google-adk>=0.3.0
+google-generativeai>=0.8.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+rich>=13.0.0
+
+# Klucze API przez zmienne środowiskowe:
+# Ollama (bez klucza): OLLAMA_API_BASE=http://localhost:11434
+# OpenAI:              OPENAI_API_KEY=sk-...
+# Anthropic:           ANTHROPIC_API_KEY=sk-ant-...
+# Groq:                GROQ_API_KEY=gsk-...
+# HuggingFace:         HUGGINGFACE_API_KEY=hf-...

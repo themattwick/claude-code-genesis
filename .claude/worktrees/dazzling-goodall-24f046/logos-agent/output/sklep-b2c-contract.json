@@ -1,0 +1,57 @@
+{
+  "system": "Sklep B2C",
+  "generated": "2026-04-29",
+  "ambiguity_score": 0.13,
+  "entities": [
+    {
+      "name": "(fallback — synteza nieudana)",
+      "states": [
+        "nieznany"
+      ],
+      "relationships": [],
+      "fields": []
+    }
+  ],
+  "actors": [],
+  "rules": [],
+  "events": [],
+  "integrations": [],
+  "tech_constraints": [
+    "P1: System przyjmuje, przetwarza i archiwizuje zamówienia e-commerce klientów B2C.",
+    "P2: Zamówienie, Pozycja zamówienia, Klient, Produkt, Płatność, Wysyłka, Faktura.",
+    "P3: Występują tylko zamówienia złożone przez zarejestrowanych klientów; brak gości i niezalogowanych użytkowników.",
+    "P4: Nie przechowywane są numerki kart płatniczych — tylko tokeny z bramki płatności Stripe.",
+    "P5: ID klienta, lista pozycji (min. 1), adres dostawy, metoda płatności, data zamówienia, status zamówienia.",
+    "P6: Komentarz do zamówienia, faktura na firmę, kod rabatowy, metoda wysyłki.",
+    "P7: Zamówienie: robocze → złożone → opłacone → wysłane → dostarczone | anulowane; Pozycja zamówienia: dodana → usunięta; Kli",
+    "P8: Edycja adresu dostawy do momentu wysyłki; zmiana ilości pozycji tylko w stanie 'robocze'; dodawanie faktury po złożeniu ",
+    "P9: Po stanie 'opłacone' nie można dodawać pozycji ani zmieniać metody płatności; po stanie 'wysłane' nie można edytować adr",
+    "P10: Numery kart, kod CVV, surowe hasła — tylko hashe i tokeny.",
+    "P11: Dostęp do systemu możliwy z przeglądarki web (desktop/mobile) i aplikacji iOS/Android; tylko HTTPS.",
+    "P12: Walidacja danych: klient i serwer; obliczenia cen i rabatów: tylko serwer; walidacja płatności Stripe: klient i serwer.",
+    "P13: PostgreSQL (podstawowe), Redis (cache), S3 (faktury), Stripe (płatności).",
+    "P14: Dane osobowe klientów EU nie opuszczają regionu eu-central-1; faktury są przenoszone do SAP w regionie eu-central-1.",
+    "P15: System nie obsługuje magazynu — integruje się z zewnętrznym WMS przez REST.",
+    "P16: Stripe (płatności), SendGrid (email), Allegro API (sync produktów).",
+    "P17: Panel admina dostępny tylko z VPN firmowego (zakres IP 10.0.0.0/8).",
+    "P18: Bramka płatności, dostawca emaili, warstwa cache Redis.",
+    "P19: Endpoint /api/orders/create — nawet w trybie degraded musi przyjąć zamówienie.",
+    "P20: VAT i waluta zależą od kraju klienta; PL=23%, DE=19%, UK=20%.",
+    "P21: Zamówienie tworzy się przy POST /api/orders; status 'robocze' do potwierdzenia.",
+    "P22: Status zamówienia po webhooku ze Stripe; stan magazynu po pickingu w WMS.",
+    "P23: Zamówienia anulowane > 90 dni — soft delete; logi audytowe — nigdy.",
+    "P24: Wysyłka rozpoczyna się gdy płatność == 'opłacone' I produkty są w magazynie.",
+    "P25: Zamówienie zamknięte gdy 'dostarczone' + 14 dni minęło bez reklamacji.",
+    "P26: Wszystkie operacje synchroniczne API < 500 ms p99.",
+    "P27: Generowanie faktur PDF i wysyłka emaili — async, do 5 min.",
+    "P28: Webhooki Stripe: 3 ponowienia z exponential backoff (1s, 5s, 25s).",
+    "P29: Nowe zamówienia blokowane gdy klient ma > 3 niezapłacone faktury.",
+    "P30: Sesje użytkownika: 30 min; tokeny resetu hasła: 1h; rezerwacja produktu: 15 min."
+  ],
+  "scale": {
+    "concurrent_users": null,
+    "response_time_ms": null,
+    "uptime_pct": null,
+    "data_volume_per_day": null
+  }
+}
