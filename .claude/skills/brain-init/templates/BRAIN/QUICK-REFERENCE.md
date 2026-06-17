@@ -7,7 +7,7 @@
 - After discovering important domain-specific edge cases
 - After making architectural decisions
 - During long sessions (use `checkpoints/`)
-- After using `/learn` or similar extraction commands
+- After extracting a reusable insight from messy work
 
 ## Subfolders
 - `learnings/` — General important conclusions
@@ -16,6 +16,7 @@
 - `bugs/` — Hard problems and their solutions
 - `checkpoints/` — Lightweight notes during long work (every 60-90 min recommended)
 - `sessions/` — Bigger session retrospectives
+- `handoffs/` — Cross-model transfer documents
 
 ## Rules for AI assistants
 1. Check `BRAIN/` at the start of any serious work.
@@ -26,6 +27,6 @@
 ## Recommended rhythm
 - Every 60-90 minutes of deep work → create a checkpoint in `checkpoints/`
 - End of major block → summarize into `learnings/`, `bugs/`, or `decisions/`
-- After long session → consider using `/learn` + moving key points here
+- After long session → extract key points into `learnings/` or `decisions/`
 
 This system is part of the DAILY workflow for projects that need strong cross-session and cross-AI knowledge (Project BRAIN).

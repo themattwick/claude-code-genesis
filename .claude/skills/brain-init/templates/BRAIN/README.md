@@ -14,6 +14,7 @@ Native memory systems in AI coding tools do not communicate well with each other
 - `bugs/` — Difficult edge cases and their solutions
 - `checkpoints/` — Lightweight mid-session notes during long work
 - `sessions/` — Larger session summaries and retrospectives
+- `handoffs/` — Cross-model transfer documents (handing work to another AI)
 
 ## Rules
 
@@ -26,8 +27,8 @@ Native memory systems in AI coding tools do not communicate well with each other
 ## Integration
 
 This system is designed to work together with:
-- DAILY rules (AGENTS.md + CLAUDE.md)
-- Strategic workflow practices (regular checkpoints, strategic-compact, /learn)
+- Project rules files (AGENTS.md, CLAUDE.md)
+- A regular checkpoint rhythm during long work
 - Cross-AI communication between different AI tools (Claude, Grok, etc.)
 
 See `QUICK-REFERENCE.md` for fast usage guidelines.

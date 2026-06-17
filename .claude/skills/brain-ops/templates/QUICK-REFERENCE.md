@@ -26,7 +26,7 @@
 Always use ISO date + descriptive kebab-case.
 
 ## Recommended rhythm in long sessions
-1. Start → read recent memory/ files
+1. Start → read recent BRAIN/ files
 2. Every 60-90 min → create checkpoint via this skill
 3. After big insight or decision → create proper entry in decisions/ or bugs/
 4. Before ending session → ask this skill to prepare handoff + report
