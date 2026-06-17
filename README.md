@@ -37,7 +37,13 @@ brain handoff        # prepare context for another model
 
 ## Brain System: Core Foundation
 
-Genesis is built on the **Project BRAIN** system — a filesystem-based long-term memory shared between AI sessions and models.
+Genesis is built on the **Project BRAIN** system — a filesystem-based long-term memory shared between AI sessions and models. Just markdown in folders, versioned by git, readable by any model. No database.
+
+### How knowledge flows
+
+![BRAIN entry lifecycle](./docs/assets/brain-lifecycle.svg)
+
+Entries aren't dumped and forgotten — they move through a lifecycle. Capture is cheap; consolidation keeps the signal; durable knowledge gets curated; stale entries are retired, not deleted. A generated [`BRAIN/INDEX.md`](./docs/BRAIN.md) gives you a one-look current state instead of re-scanning the tree. See [FRONTMATTER.md](./docs/FRONTMATTER.md) for the entry format.
 
 ### Core Skills (v1.0)
 
@@ -62,8 +68,9 @@ brain hygiene                    # Health check on BRAIN/ structure
 brain report                     # Session summary
 
 # State management
-brain load                       # Check current state
+brain load                       # Check current state (reads BRAIN/INDEX.md)
 brain status                     # Quick status
+brain index                      # Regenerate BRAIN/INDEX.md from entries
 
 # Knowledge management
 brain organize                   # Organize raw notes into structured entries
@@ -78,12 +85,13 @@ Each project gets a `BRAIN/` directory after running `brain setup`:
 
 ```
 BRAIN/
+├── INDEX.md         # Auto-generated current state + entry index
 ├── checkpoints/     # Progress snapshots (save/resume)
 ├── sessions/        # Session summaries
 ├── decisions/       # Key decisions made
 ├── learnings/       # Extracted insights
 ├── bugs/            # Hard cases encountered
-├── patterns/        # Reusable patterns (v1.1)
+├── patterns/        # Reusable patterns
 └── handoffs/        # Cross-model transfer docs
 ```
 
@@ -91,7 +99,9 @@ BRAIN/
 
 Want to know what a real `BRAIN/` looks like after a week of work? Check out
 [examples/sample-project/](./examples/sample-project) — a worked example with
-real checkpoints, a decision record, and a cross-model handoff.
+checkpoints, a decision (and a superseded one), a bug linked to its learning, a
+cross-model handoff, and a generated
+[`INDEX.md`](./examples/sample-project/BRAIN/INDEX.md) tying it all together.
 
 ## Philosophy
 
@@ -131,6 +141,6 @@ MIT — Use freely in your projects.
 
 ---
 
-**Built with ⚓ by [themattwick](https://github.com/themattwick)**
+**Built with 🧠 by [themattwick](https://github.com/themattwick)**
 
 *"The origin of intelligent workflows."*
