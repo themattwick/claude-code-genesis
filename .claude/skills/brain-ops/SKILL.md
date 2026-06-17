@@ -26,28 +26,18 @@ metadata:
 
 ## Commands
 
-```bash
-# Save progress
-/brain checkpoint "what I just completed"
-
-# Cross-model handoff
-/brain handoff
-
-# Health check
-/brain hygiene
-
-# Session summary
-/brain report
+```
+brain checkpoint "what I just completed"   # Save progress
+brain handoff                               # Cross-model handoff
+brain hygiene                               # Health check
+brain report                                # Session summary
 ```
 
-## Helper Scripts
+## Helper Script
 
 ```bash
-# Check current state
-python .claude/scripts/brain_load.py
-
-# Prepare consolidation
-python .claude/scripts/brain_consolidate.py
+# Create a timestamped checkpoint file
+python .claude/skills/brain-ops/scripts/create_checkpoint.py "Short title"
 ```
 
 ## Related Skills

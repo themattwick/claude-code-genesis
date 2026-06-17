@@ -43,7 +43,7 @@ def main():
 
     if not target_dir:
         print("Could not find BRAIN/checkpoints/ (or legacy memory/checkpoints/) directory.")
-        print("Please run this from inside the project (or C:\\CLAUDE) or provide full path.")
+        print("Please run this from inside a project that has a BRAIN/ directory.")
         sys.exit(1)
 
     filepath = target_dir / filename

@@ -1,12 +1,10 @@
 ---
 name: brain-memory
-description: Persistent learning system - store and recall patterns across sessions
-version: 1.0.0
-author: themattwick
-requires: claude-code >= 2.1
-tags: [brain, memory, persistence, learning, patterns]
-keywords: [remember, recall, patterns, learning, knowledge]
-status: planning
+description: Persistent learning system — store and recall patterns across sessions
+metadata:
+  short-description: "Persistent learning across sessions (v1.1)"
+  category: "workflow"
+  tags: ["brain", "memory", "persistence", "learning", "patterns"]
 ---
 
 # brain-memory — Persistent Learning System
@@ -21,9 +19,9 @@ Currently, use `brain-ops` for session-specific tracking.
 ## Planned Usage
 
 ```
-/brain remember "Pattern: Always validate user input before processing"
-/brain recall "patterns about validation"
-/brain patterns list
+brain remember "Pattern: Always validate user input before processing"
+brain recall "patterns about validation"
+brain patterns list
 ```
 
 ## Architecture (Planned)

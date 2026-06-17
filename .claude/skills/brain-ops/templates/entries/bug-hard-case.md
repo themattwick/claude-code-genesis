@@ -31,4 +31,4 @@
 - [ ] Verified on real corpus
 
 ---
-**Tip:** These entries are the best "amunicja" you can leave for the other model. Be specific with paths and line numbers.
+**Tip:** These entries are the best ammunition you can leave for the other model. Be specific with paths and line numbers.

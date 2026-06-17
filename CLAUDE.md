@@ -2,58 +2,66 @@
 
 ## Overview
 
-Genesis is a production-ready skills hub for Claude Code focused on intelligent workflows: checkpoints, handoffs, memory, and security.
+Genesis is a production-ready skills hub for Claude Code focused on intelligent workflows: checkpoints, handoffs, memory, and cross-model collaboration. Built on the proven **Project BRAIN** system.
 
 ## Project Structure
 
 ```
 genesis/
 ├── .claude/
-│   ├── skills/
-│   │   ├── anchor/                  ← Main checkpoint skill
-│   │   ├── anchor-handoff/          ← Cross-model transfer
-│   │   ├── anchor-memory/           ← Persistent learning
-│   │   └── anchor-security/         ← Security guardrails
-│   ├── agents/                      ← Specialized agents
-│   ├── hooks/                       ← Automation hooks
-│   └── rules/                       ← Development standards
+│   └── skills/
+│       ├── brain/           ← Main router (entry point for all BRAIN commands)
+│       ├── brain-init/      ← One-time project setup
+│       ├── brain-ops/       ← Daily operations (checkpoints, handoffs, hygiene)
+│       └── brain-memory/    ← Persistent learning (v1.1)
 ├── docs/
-│   ├── ROADMAP.md                   ← v1.0 → v2.0 timeline
-│   ├── CONTRIBUTING.md              ← How to create skills
-│   └── SKILL_DIRECTORY.md           ← All skills documented
-├── README.md                        ← User-facing intro
-├── CLAUDE.md                        ← This file
-├── LICENSE                          ← MIT
+│   ├── ROADMAP.md           ← v1.0 → v2.0 timeline
+│   ├── CONTRIBUTING.md      ← How to create skills
+│   └── SKILL_DIRECTORY.md   ← All skills documented
+├── README.md                ← User-facing intro
+├── CLAUDE.md                ← This file
+├── LICENSE                  ← MIT
 └── .gitignore
 ```
 
 ## v1.0 Goals
 
-- ✅ **Anchor** — Checkpoint tracking for long-running tasks
-- ✅ **Anchor-Handoff** — Seamless cross-model context transfer
-- ✅ **Anchor-Memory** — Persistent learning across sessions
-- 🔄 **Anchor-Security** — Optional safety guardrails
+- ✅ **brain** — Smart router for all BRAIN commands
+- ✅ **brain-init** — One-time project setup (BRAIN/ directory structure)
+- ✅ **brain-ops** — Daily operations: checkpoints, handoffs, hygiene, consolidation
+- 🔄 **brain-memory** — Persistent learning across sessions (v1.1)
+
+## How Skills Work
+
+Each skill lives in `.claude/skills/<name>/` and contains a `SKILL.md` with YAML frontmatter. Claude Code reads the frontmatter description to decide when to activate the skill.
+
+The `brain` skill acts as the main entry point — it routes all `brain ...` phrases to the right sub-skill.
 
 ## Development Workflow
 
 1. **Create skill** — Add to `.claude/skills/[name]/`
 2. **Test locally** — Use in Claude Code session
-3. **Document** — Add SKILL.md frontmatter
+3. **Document** — Add SKILL.md with proper frontmatter
 4. **Commit** — Clear, descriptive messages
 5. **Release** — Tag version, update ROADMAP
 
 ## Skill Format
 
-Each skill uses SKILL.md format with YAML frontmatter:
-
-```markdown
+```yaml
 ---
-name: anchor
-description: Checkpoint system for tracking long-running tasks
-requires: claude-code >= 2.1
+name: my-skill
+description: >
+  One-line description Claude uses to trigger this skill.
+metadata:
+  short-description: "Brief summary"
+  category: "workflow"
+  tags: ["tag1", "tag2"]
 ---
 
-# Usage...
+# my-skill — Title
+
+## What it does
+...
 ```
 
 ## Key Principles
@@ -66,8 +74,8 @@ requires: claude-code >= 2.1
 
 ## Timeline
 
-- **v1.0** (June 2026) — Launch with 4 core skills
-- **v1.1** (July 2026) — Research + TDD patterns
+- **v1.0** (June 2026) — brain-* system: router, init, ops
+- **v1.1** (July 2026) — brain-memory + research patterns
 - **v1.2** (August 2026) — Performance optimization
 - **v2.0** (Q3 2026) — Enterprise features
 

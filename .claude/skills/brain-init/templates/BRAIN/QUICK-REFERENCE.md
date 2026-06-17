@@ -1,6 +1,6 @@
 # Project BRAIN — Quick Reference
 
-**Main location:** `BRAIN/` (e.g. `C:\CLAUDE\BRAIN/` for the monorepo, or project-local `BRAIN/`)
+**Main location:** `BRAIN/` (project-local, or `~/BRAIN/` for a global setup)
 
 ## When to write here
 - After significant debugging or analysis

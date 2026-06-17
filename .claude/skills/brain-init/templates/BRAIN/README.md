@@ -28,6 +28,6 @@ Native memory systems in AI coding tools do not communicate well with each other
 This system is designed to work together with:
 - DAILY rules (AGENTS.md + CLAUDE.md)
 - Strategic workflow practices (regular checkpoints, strategic-compact, /learn)
-- Cross-AI communication between Claude Code and Grok Build
+- Cross-AI communication between different AI tools (Claude, Grok, etc.)
 
 See `QUICK-REFERENCE.md` for fast usage guidelines.
