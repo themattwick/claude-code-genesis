@@ -11,77 +11,49 @@ metadata:
   tags: ["brain", "project-brain", "checkpoints", "handoff", "cross-model"]
 ---
 
-# brain — Unified Project BRAIN Interface (Claude side)
+# brain — Unified Project BRAIN Interface
 
-This is the **recommended single entry point** for everything related to Project BRAIN.
+Single entry point for everything related to Project BRAIN. Always start with the word **"brain"**.
 
-From now on, start BRAIN-related requests with the word **"brain"**.
+## Commands
 
-## Examples of good usage
+### Setup (one-time)
+- `brain setup` / `brain init` / `brain bootstrap`
 
-- "brain setup this project"
-- "brain init"
-- "brain bootstrap"
-- "brain checkpoint what I just finished"
-- "brain handoff for Grok"
-- "brain prepare final report"
-- "brain hygiene check"
-- "brain organize these notes"
-- "brain create decision about X"
+### Daily Operations
+- `brain checkpoint [description]` — Save progress snapshot
+- `brain handoff` — Prepare cross-model context transfer
+- `brain hygiene` — Health check on BRAIN/ structure
+- `brain report` — Session summary
+- `brain organize` — Synthesize raw notes into structured entries
 
-## How it works internally
+### Loading State
+- `brain load` / `brain status` / `brain briefing`
 
-This skill acts as a smart router:
-
-| Your phrase starts with...                              | What actually happens                                      | Underlying skill used      |
-|---------------------------------------------------------|------------------------------------------------------------|----------------------------|
-| "brain setup", "brain init", "brain bootstrap"       | One-time creation of the full `BRAIN/` structure + ready sections for AGENTS.md / CLAUDE.md | `brain-init`             |
-| "brain checkpoint", "brain handoff", "brain hygiene", "brain report", "brain organize", etc. | Active operations during or after work                     | `brain-ops`              |
-| "brain ..." (general)                                  | The router decides the best action (may use both skills)   | `brain-ops` + `brain-init` |
-
-## Relationship to other skills
-
-- `brain-init` → the one-time setup skill (this is the new name for what used to be called the old `project-memory` skill). You normally invoke it by saying "brain init" or "brain setup".
-- `brain-ops` → the core engine for ongoing operations. You can call it directly for advanced use, but the `brain` router is the recommended daily interface.
-- This `brain` skill is the user-friendly front door for the whole system.
-
-## Recommendation
-
-Add the `brain` skill to your DAILY set for any serious project that uses Project BRAIN.
-
-**Preferred way from now on:** Always start with the word "brain".
-
-## Loading Current State
-
-Commands like:
-- brain load
-- brain status
-- brain briefing
-- brain current state
-
-Best way: Run the helper script:
-
-```bash
-
-Best way: Run the helper script:
-
-```bash
-python .claude/scripts/brain_load.py
-# or with project path
-python .claude/scripts/brain_load.py /path/to/project
-```
-
-The script finds the latest handoff/summary document, recent checkpoints, key decisions and hard cases, and prints a clean, structured briefing of the current state of the Project BRAIN.
-
-This works at any time of day — not tied to morning or night work.
+When asked to load state, read the BRAIN/ directory directly:
+1. Find the latest file in `BRAIN/handoffs/` or any `*HANDOFF*.md` in root
+2. List recent files in `BRAIN/checkpoints/`
+3. List recent files in `BRAIN/decisions/`
+4. List recent files in `BRAIN/bugs/`
+5. Present a structured briefing
 
 ### Consolidation
+- `brain consolidate`
 
-- brain consolidate
+Review raw material in `BRAIN/checkpoints/` and `BRAIN/sessions/`, then synthesize into structured entries in `BRAIN/decisions/`, `BRAIN/learnings/`, `BRAIN/bugs/`, or `BRAIN/patterns/`.
 
-Helps synthesize scattered material (checkpoints, raw notes, multiple related entries) into clean, high-quality entries in `decisions/`, `learnings/`, `bugs/`, etc.
+## Routing Table
 
-This is different from Claude's native `/compact` — it's about long-term knowledge quality in the Project Brain, not just shrinking the current context.
+| Phrase | Routes to |
+|--------|-----------|
+| "brain setup", "brain init", "brain bootstrap" | `brain-init` |
+| "brain checkpoint", "brain handoff", "brain hygiene", "brain report" | `brain-ops` |
+| "brain load", "brain status", "brain briefing" | Read BRAIN/ directly |
+| "brain consolidate", "brain organize" | `brain-ops` |
+| "brain ..." (general) | Decide best action |
 
-**Practical helper:**
-Run `python .claude/scripts/brain_consolidate.py` for a preparation report before doing consolidation work.
+## Related Skills
+
+- `brain-init` — One-time project setup
+- `brain-ops` — Core operations engine
+- `brain-memory` — Persistent learning (v1.1)
