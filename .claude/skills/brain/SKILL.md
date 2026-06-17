@@ -62,9 +62,13 @@ Commands like:
 Best way: Run the helper script:
 
 ```bash
-python C:\Users\MaxOFFe\.claude\skills\brain\scripts\brain_load.py
-# or with path
-python C:\Users\MaxOFFe\.claude\skills\brain\scripts\brain_load.py "C:\CLAUDE"
+
+Best way: Run the helper script:
+
+```bash
+python .claude/scripts/brain_load.py
+# or with project path
+python .claude/scripts/brain_load.py /path/to/project
 ```
 
 The script finds the latest handoff/summary document, recent checkpoints, key decisions and hard cases, and prints a clean, structured briefing of the current state of the Project BRAIN.
@@ -80,6 +84,4 @@ Helps synthesize scattered material (checkpoints, raw notes, multiple related en
 This is different from Claude's native `/compact` — it's about long-term knowledge quality in the Project Brain, not just shrinking the current context.
 
 **Practical helper:**
-Run `python C:\Users\MaxOFFe\.claude\skills\brain\scripts\brain_consolidate.py` for a preparation report before doing consolidation work.
-
-See full docs: `C:\Users\MaxOFFe\.grok\skills\brain\SKILL.md`
+Run `python .claude/scripts/brain_consolidate.py` for a preparation report before doing consolidation work.

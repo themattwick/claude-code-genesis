@@ -31,8 +31,8 @@ def main():
         Path("../memory/checkpoints"),
         Path("../../BRAIN/checkpoints"),
         Path("../../memory/checkpoints"),
-        Path("C:/CLAUDE/BRAIN/checkpoints"),
-        Path("C:/CLAUDE/memory/checkpoints"),
+        Path.cwd() / "BRAIN" / "checkpoints",
+        Path.cwd() / "memory" / "checkpoints",
     ]
 
     target_dir = None
