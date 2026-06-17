@@ -1,3 +1,10 @@
+---
+type: handoff
+status: active
+date: YYYY-MM-DD
+tags: []
+---
+
 # HANDOFF — [From Model] to [To Model] — [Date]
 
 **Operation / Theme:**  

@@ -1,3 +1,11 @@
+---
+type: learning
+status: active
+date: 2026-06-12
+tags: [orm, performance, testing]
+links: [bugs/2026-06-11-task-list-n-plus-1.md, patterns/2026-06-13-query-count-ceiling.md]
+---
+
 # Learning — Lazy ORM relations are an N+1 trap in list endpoints
 
 **Date:** 2026-06-12

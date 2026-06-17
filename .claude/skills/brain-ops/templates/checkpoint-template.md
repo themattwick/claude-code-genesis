@@ -1,3 +1,10 @@
+---
+type: checkpoint
+status: active
+date: YYYY-MM-DD
+tags: []
+---
+
 # Checkpoint — [Short Title]
 
 **Time:** YYYY-MM-DD HH:MM  

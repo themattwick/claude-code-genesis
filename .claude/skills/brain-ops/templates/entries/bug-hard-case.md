@@ -1,3 +1,10 @@
+---
+type: bug
+status: active
+date: YYYY-MM-DD
+tags: []
+---
+
 # [Short descriptive title of the hard case]
 
 **Date:** YYYY-MM-DD  

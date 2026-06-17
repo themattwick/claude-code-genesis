@@ -48,10 +48,17 @@ def main():
 
     filepath = target_dir / filename
 
-    template = f"""# Checkpoint — {title}
+    template = f"""---
+type: checkpoint
+status: active
+date: {date_str}
+tags: []
+---
 
-**Time:** {now.strftime("%Y-%m-%d %H:%M")}  
-**Focus:** 
+# Checkpoint — {title}
+
+**Time:** {now.strftime("%Y-%m-%d %H:%M")}
+**Focus:**
 
 ## Completed since last checkpoint
 

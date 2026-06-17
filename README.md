@@ -112,8 +112,10 @@ still just an idea. Short version:
 
 ## Documentation
 
+- **[BRAIN.md](./docs/BRAIN.md)** — BRAIN architecture, entry lifecycle, and the index
+- **[FRONTMATTER.md](./docs/FRONTMATTER.md)** — Entry frontmatter standard
 - **[CLAUDE.md](./CLAUDE.md)** — Project structure and setup
-- **[ROADMAP.md](./docs/ROADMAP.md)** — v1.0 through v2.0 timeline
+- **[ROADMAP.md](./docs/ROADMAP.md)** — what's shipped, next, and exploring
 - **[CONTRIBUTING.md](./docs/CONTRIBUTING.md)** — How to create skills
 - **[Skills Directory](./docs/SKILL_DIRECTORY.md)** — All skills documented
 

@@ -30,12 +30,18 @@ Single entry point for everything related to Project BRAIN. Always start with th
 ### Loading State
 - `brain load` / `brain status` / `brain briefing`
 
-When asked to load state, read the BRAIN/ directory directly:
-1. Find the latest file in `BRAIN/handoffs/`
-2. List recent files in `BRAIN/checkpoints/`
-3. List recent files in `BRAIN/decisions/`
-4. List recent files in `BRAIN/bugs/`
-5. Present a structured briefing
+When asked to load state, prefer the generated index:
+1. If `BRAIN/INDEX.md` exists, read it — it already summarizes current state,
+   active knowledge, and retired entries.
+2. If it's missing or looks stale, regenerate it first:
+   `python .claude/skills/brain-ops/scripts/build_index.py <project-root>`
+3. Present the current-state header plus anything relevant to the task.
+
+### Indexing
+- `brain index` / `brain reindex`
+
+Regenerate `BRAIN/INDEX.md` from entry frontmatter. Run after adding or retiring
+entries. See `docs/FRONTMATTER.md` for the entry format.
 
 ### Consolidation
 - `brain consolidate`
@@ -48,7 +54,8 @@ Review raw material in `BRAIN/checkpoints/` and `BRAIN/sessions/`, then synthesi
 |--------|-----------|
 | "brain setup", "brain init", "brain bootstrap" | `brain-init` |
 | "brain checkpoint", "brain handoff", "brain hygiene", "brain report" | `brain-ops` |
-| "brain load", "brain status", "brain briefing" | Read BRAIN/ directly |
+| "brain load", "brain status", "brain briefing" | Read `BRAIN/INDEX.md` |
+| "brain index", "brain reindex" | `brain-ops` (build_index.py) |
 | "brain consolidate", "brain organize" | `brain-ops` |
 | "brain ..." (general) | Decide best action |
 

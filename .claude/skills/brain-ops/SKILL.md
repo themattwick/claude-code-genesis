@@ -23,6 +23,7 @@ metadata:
 - Turn raw work into structured entries in `BRAIN/decisions/`, `bugs/`, `learnings/`, `patterns/`
 - Prepare high-quality handoffs for other models
 - Consolidate scattered notes into clean, durable knowledge
+- Keep `BRAIN/INDEX.md` current so `brain load` stays fast
 - Keep the Project BRAIN healthy
 
 ## Commands
@@ -34,14 +35,21 @@ brain hygiene                               # Health check
 brain report                                # Session summary
 brain organize                              # Structure raw notes into entries
 brain consolidate                           # Synthesize checkpoints into decisions/learnings
+brain index                                 # Regenerate BRAIN/INDEX.md
 ```
 
-## Helper Script
+## Helper Scripts
 
 ```bash
 # Create a timestamped checkpoint file
 python .claude/skills/brain-ops/scripts/create_checkpoint.py "Short title"
+
+# Regenerate BRAIN/INDEX.md from entry frontmatter (zero dependencies)
+python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 ```
+
+Entries use a small optional frontmatter block (`type`, `status`, `tags`, …) —
+see `docs/FRONTMATTER.md`. The index degrades gracefully for entries without it.
 
 ## Related Skills
 

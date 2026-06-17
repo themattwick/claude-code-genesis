@@ -1,3 +1,10 @@
+---
+type: handoff
+status: active
+date: 2026-06-12
+tags: [auth, handoff]
+---
+
 # HANDOFF — Claude → Grok — 2026-06-12
 
 **Operation / Theme:** TaskFlow API — auth done, list perf fixed, refresh rotation next

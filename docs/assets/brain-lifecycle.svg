@@ -1,0 +1,44 @@
+<svg width="720" viewBox="0 0 720 232" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <title>BRAIN entry lifecycle</title>
+  <desc>Entries flow left to right: capture raw notes, consolidate to keep the signal, curate durable knowledge, then retire or promote. Amber marks ephemeral entries safe to prune; blue marks durable long-term value.</desc>
+  <rect x="0.5" y="0.5" width="719" height="231" rx="10" fill="#ffffff" stroke="#e3e5e8"/>
+  <text x="32" y="40" font-size="17" font-weight="600" fill="#1a1a1a">BRAIN entry lifecycle</text>
+  <text x="32" y="62" font-size="12.5" fill="#6b7077">capture → consolidate → curate → retire</text>
+
+  <g>
+    <rect x="24" y="92" width="150" height="64" rx="6" fill="#fbefd6" stroke="#c8922a"/>
+    <text x="99" y="122" font-size="15" font-weight="600" fill="#7a5a12" text-anchor="middle">capture</text>
+    <text x="99" y="142" font-size="12" fill="#7a5a12" text-anchor="middle">raw work notes</text>
+  </g>
+  <g>
+    <rect x="198" y="92" width="150" height="64" rx="6" fill="#f0f1f2" stroke="#b8bcc2"/>
+    <text x="273" y="122" font-size="15" font-weight="600" fill="#3a3d42" text-anchor="middle">consolidate</text>
+    <text x="273" y="142" font-size="12" fill="#3a3d42" text-anchor="middle">keep the signal</text>
+  </g>
+  <g>
+    <rect x="372" y="92" width="150" height="64" rx="6" fill="#deebf7" stroke="#2f6fb0"/>
+    <text x="447" y="122" font-size="15" font-weight="600" fill="#1b4571" text-anchor="middle">curate</text>
+    <text x="447" y="142" font-size="12" fill="#1b4571" text-anchor="middle">durable entries</text>
+  </g>
+  <g>
+    <rect x="546" y="92" width="150" height="64" rx="6" fill="#f0f1f2" stroke="#b8bcc2"/>
+    <text x="621" y="122" font-size="15" font-weight="600" fill="#3a3d42" text-anchor="middle">retire</text>
+    <text x="621" y="142" font-size="12" fill="#3a3d42" text-anchor="middle">archive / promote</text>
+  </g>
+
+  <g stroke="#9aa0a6" stroke-width="1.5" fill="none">
+    <path d="M178 124 L194 124" marker-end="url(#ah)"/>
+    <path d="M352 124 L368 124" marker-end="url(#ah)"/>
+    <path d="M526 124 L542 124" marker-end="url(#ah)"/>
+  </g>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#9aa0a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect x="200" y="190" width="13" height="13" rx="3" fill="#fbefd6" stroke="#c8922a"/>
+  <text x="220" y="201" font-size="12" fill="#6b7077">ephemeral — safe to prune</text>
+  <rect x="440" y="190" width="13" height="13" rx="3" fill="#deebf7" stroke="#2f6fb0"/>
+  <text x="460" y="201" font-size="12" fill="#6b7077">durable — long-term value</text>
+</svg>

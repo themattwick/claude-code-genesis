@@ -1,3 +1,10 @@
+---
+type: checkpoint
+status: active
+date: 2026-06-10
+tags: [auth, jwt]
+---
+
 # Checkpoint — Auth middleware wired into the request pipeline
 
 **Time:** 2026-06-10 14:20

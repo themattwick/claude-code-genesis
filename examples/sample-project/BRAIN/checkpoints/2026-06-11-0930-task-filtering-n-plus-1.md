@@ -1,3 +1,10 @@
+---
+type: checkpoint
+status: active
+date: 2026-06-11
+tags: [tasks, performance]
+---
+
 # Checkpoint — Task filtering endpoint + spotted an N+1
 
 **Time:** 2026-06-11 09:30

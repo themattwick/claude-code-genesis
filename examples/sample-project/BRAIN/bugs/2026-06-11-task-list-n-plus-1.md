@@ -1,3 +1,11 @@
+---
+type: bug
+status: active
+date: 2026-06-11
+tags: [performance, orm]
+links: [learnings/2026-06-12-orm-lazy-relations.md]
+---
+
 # N+1 query on GET /tasks (assignee lookup)
 
 **Date:** 2026-06-11

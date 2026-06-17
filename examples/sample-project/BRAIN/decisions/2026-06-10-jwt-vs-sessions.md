@@ -1,3 +1,11 @@
+---
+type: decision
+status: active
+date: 2026-06-10
+tags: [auth, jwt, security]
+supersedes: 2026-05-20-basic-auth-first-pass.md
+---
+
 # Decision — JWT access/refresh tokens over server-side sessions
 
 **Date:** 2026-06-10
