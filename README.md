@@ -1,11 +1,11 @@
-# Genesis — Production-Ready Skills for Claude Code
+# Genesis — Skills for Claude Code
 
 **The origin of intelligent workflows.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-2.1%2B-green.svg)]()
 
-Genesis is a comprehensive hub of production-ready skills for Claude Code. Built on the proven **Project BRAIN** system for intelligent workflow management.
+Genesis is a focused set of skills for Claude Code, built on the **BRAIN** system — a memory layer battle-tested in daily cross-model work (Claude ↔ Grok). Start with checkpoints, handoffs, and persistent memory.
 
 ## Why Genesis?
 
@@ -87,9 +87,15 @@ BRAIN/
 └── handoffs/        # Cross-model transfer docs
 ```
 
+## See It In Action
+
+Want to know what a real `BRAIN/` looks like after a week of work? Check out
+[examples/sample-project/](./examples/sample-project) — a worked example with
+real checkpoints, a decision record, and a cross-model handoff.
+
 ## Philosophy
 
-- **Quality over quantity** — Production-tested before release
+- **Quality over quantity** — Each skill earns its place
 - **Single responsibility** — Each skill solves one problem well
 - **Composable** — Skills work together seamlessly
 - **Transparent** — System prompts and patterns visible
@@ -97,10 +103,12 @@ BRAIN/
 
 ## Roadmap
 
-- **v1.0** (June 2026) — Brain system: router, init, ops, memory stub
-- **v1.1** (July 2026) — brain-memory full impl + research patterns
-- **v1.2** (August 2026) — Performance optimization
-- **v2.0** (Q3 2026) — Multi-agent orchestration + enterprise
+See [ROADMAP.md](./docs/ROADMAP.md) for what's shipped, what's next, and what's
+still just an idea. Short version:
+
+- **Now** — BRAIN system: router, init, ops (+ memory stub)
+- **Next** — full brain-memory recall, smoother install, more examples
+- **Exploring** — research/TDD patterns, semantic search, multi-agent workflows
 
 ## Documentation
 

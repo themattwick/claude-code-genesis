@@ -1,111 +1,50 @@
 # Genesis Roadmap
 
-## v1.0 — Launch (June 2026) 🚀
+Genesis grows from one battle-tested foundation — the **BRAIN** memory system —
+toward a small, focused set of skills that solve real Claude Code friction.
 
-### Core Skills (brain-* system)
-
-- **brain** — Smart router for all BRAIN commands
-  - Routes `brain setup`, `brain checkpoint`, `brain handoff`, `brain load`, etc.
-  - Single entry point for everything BRAIN-related
-
-- **brain-init** — One-time project setup
-  - Creates full `BRAIN/` directory structure
-  - Generates README, QUICK-REFERENCE, and starter templates
-
-- **brain-ops** — Daily operations engine
-  - Checkpoint discipline (every 60-90 min)
-  - Cross-model handoffs (Claude ↔ other models)
-  - Knowledge synthesis: decisions/, bugs/, learnings/
-  - Helper: `create_checkpoint.py`
-
-- **brain-memory** — Persistent learning *(stub, full impl in v1.1)*
-  - Foundation for cross-session pattern recall
-
-### v1.0 Deliverables
-- ✅ All 4 brain-* skills production-ready
-- ✅ Full documentation with examples
-- ✅ GitHub repo public + searchable
-- ✅ Installation guide
+No vanity metrics here. Just what's shipped, what's next, and what's only an idea
+until the foundation proves itself.
 
 ---
 
-## v1.1 — Memory + Research (July 2026) 🔬
+## ✅ v1.0 — Foundation (now)
 
-### New Skills
-- **brain-memory** — Full implementation
-  - Store and recall patterns across sessions
-  - Semantic search over BRAIN/ entries
+The BRAIN system: filesystem-based memory shared across sessions and models.
 
-- **genesis-research** — Research automation
-  - Smart search patterns
-  - Information synthesis
-  - Report generation
+- **brain** — router / single entry point for all BRAIN commands
+- **brain-init** — one-time project setup (creates the `BRAIN/` structure)
+- **brain-ops** — checkpoints, handoffs, hygiene, consolidation
+- **brain-memory** — stub today; full recall coming next
 
-- **genesis-tdd** — Test-driven development
-  - Test-first patterns
-  - Coverage tracking
-
-### Improvements
-- Better error messages across all skills
-- Extended examples and templates
-
-### Target
-- 200+ stars on GitHub
-- 5+ community contributors
+Shipped with full docs, a worked example under `examples/`, and MIT license.
 
 ---
 
-## v1.2 — Performance (August 2026) ⚡
+## 🔜 Next — Memory that recalls
 
-### New Skills
-- **genesis-performance** — Optimization toolkit
-  - Profiling patterns
-  - Bottleneck detection
-  - Benchmarking
-
-### Infrastructure
-- Skill validation framework
-- Automated testing for skills
-
-### Target
-- 400+ stars
-- 10+ contributors
+- **brain-memory** — store & recall patterns across sessions (currently a stub)
+- Smoother install — one script instead of manual copy
+- More worked examples covering real workflows (debugging, cross-model handoff)
 
 ---
 
-## v2.0 — Enterprise (Q3 2026) 🏢
+## 🧭 Exploring — only if the foundation proves itself
 
-### Major Features
-- **Multi-agent orchestration** — 3+ model coordination with distributed checkpoints
-- **Semantic Search** — Search across all BRAIN/ entries (PostgreSQL + pgvector)
-- **Team Collaboration** — Shared checkpoints, permissions, audit logging
+Ideas under consideration, *not* commitments:
 
-### Scale Target
-- 500+ stars
-- 20+ skills
-- 20+ core contributors
+- Research & TDD skill patterns (`genesis-research`, `genesis-tdd`)
+- Semantic search over `BRAIN/` entries
+- Multi-agent / team workflows
+
+Priorities follow real usage and community feedback, not a fixed calendar.
 
 ---
 
-## Success Metrics
+## How to influence the roadmap
 
-| Version | Timeline | Stars | Skills | Contributors |
-|---------|----------|-------|--------|--------------|
-| v1.0 | June 2026 | 100+ | 4 | 1 |
-| v1.1 | July 2026 | 250+ | 6 | 5+ |
-| v1.2 | August 2026 | 400+ | 8+ | 10+ |
-| v2.0 | Q3 2026 | 500+ | 20+ | 20+ |
+- 🐛 [Open an issue](https://github.com/themattwick/claude-code-genesis/issues) for bugs or requests
+- 💬 [Start a discussion](https://github.com/themattwick/claude-code-genesis/discussions) for ideas
+- 🔧 [Contribute a skill](./CONTRIBUTING.md)
 
----
-
-## Key Principles
-
-1. **Quality first** — Production-tested always
-2. **User-centric** — Real feedback drives decisions
-3. **Open source** — Community-driven development
-4. **Transparent** — Public roadmap + progress tracking
-
----
-
-**Last updated:** June 2026
-**Issues:** [GitHub Issues](https://github.com/themattwick/claude-code-genesis/issues)
+The fastest way to move something from "exploring" to "next" is to use it and tell us what broke.

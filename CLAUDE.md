@@ -2,7 +2,7 @@
 
 ## Overview
 
-Genesis is a production-ready skills hub for Claude Code focused on intelligent workflows: checkpoints, handoffs, memory, and cross-model collaboration. Built on the proven **Project BRAIN** system.
+Genesis is a focused set of skills for Claude Code centered on intelligent workflows: checkpoints, handoffs, memory, and cross-model collaboration. Built on the **BRAIN** system, battle-tested in daily cross-model work.
 
 ## Project Structure
 
@@ -66,7 +66,7 @@ metadata:
 
 ## Key Principles
 
-- **Quality** — Production-tested before release
+- **Quality** — Each skill earns its place before release
 - **Focus** — One skill, one responsibility
 - **Composable** — Skills work together seamlessly
 - **Transparent** — System patterns visible to users
@@ -74,10 +74,11 @@ metadata:
 
 ## Timeline
 
-- **v1.0** (June 2026) — brain-* system: router, init, ops
-- **v1.1** (July 2026) — brain-memory + research patterns
-- **v1.2** (August 2026) — Performance optimization
-- **v2.0** (Q3 2026) — Enterprise features
+See [docs/ROADMAP.md](docs/ROADMAP.md). Short version:
+
+- **Now** — BRAIN system: router, init, ops (+ memory stub)
+- **Next** — full brain-memory recall, smoother install, more examples
+- **Exploring** — research/TDD patterns, semantic search, multi-agent workflows
 
 ## Team
 
