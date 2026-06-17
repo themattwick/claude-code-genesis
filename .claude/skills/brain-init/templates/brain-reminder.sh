@@ -4,7 +4,7 @@
 
 echo "=== Project BRAIN Reminder ==="
 echo "Important insights from this session should be written to the 'BRAIN/' directory."
-echo "Recommended locations (C:\CLAUDE\BRAIN or project-local BRAIN/):"
+echo "Recommended locations (project-local BRAIN/ or ~/BRAIN/):"
 echo "  - BRAIN/learnings/"
 echo "  - BRAIN/bugs/"
 echo "  - BRAIN/decisions/"
