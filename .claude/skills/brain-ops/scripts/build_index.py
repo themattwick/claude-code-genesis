@@ -18,7 +18,9 @@ from datetime import datetime
 from pathlib import Path
 
 ENTRY_DIRS = ["handoffs", "checkpoints", "sessions",
-              "decisions", "bugs", "learnings", "patterns"]
+              "decisions", "bugs", "learnings", "patterns", "reference", "specs"]
+PREFERRED_TYPE_ORDER = ["decision", "spec", "learning", "pattern", "bug",
+                         "reference", "handoff", "session", "checkpoint"]
 SKIP_FILES = {"INDEX.md", "README.md", "QUICK-REFERENCE.md"}
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
@@ -128,10 +130,14 @@ def render_index(entries: list[dict]) -> str:
     out.append(f"- **Active entries:** {len(active)}  ·  "
                f"**Retired:** {len(retired)}\n")
 
-    # Active entries grouped by type
+    # Active entries grouped by type. Known types render in a preferred
+    # order; anything else (typos, new types like "worksheet") still gets
+    # its own section instead of silently vanishing from the index.
     out.append("## Active knowledge\n")
-    for t in ["decision", "learning", "pattern", "bug", "handoff",
-              "session", "checkpoint"]:
+    present_types = {e["type"] for e in active}
+    ordered_types = [t for t in PREFERRED_TYPE_ORDER if t in present_types]
+    ordered_types += sorted(present_types - set(ordered_types))
+    for t in ordered_types:
         group = [e for e in active if e["type"] == t]
         if not group:
             continue

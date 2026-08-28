@@ -34,6 +34,8 @@ BRAIN/
 ├── bugs/                  # Hard cases encountered
 ├── learnings/             # Extracted insights
 ├── patterns/              # Reusable patterns
+├── reference/             # External-fact lookups (repo locations, API notes, glossaries)
+├── specs/                 # Specs, worksheets, drafts — working documents, not verdicts
 └── handoffs/              # Cross-model transfer docs
 ```
 

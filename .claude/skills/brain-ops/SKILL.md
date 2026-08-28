@@ -20,7 +20,7 @@ metadata:
 ## Responsibilities
 
 - Checkpoint discipline (save progress every 60-90 min)
-- Turn raw work into structured entries in `BRAIN/decisions/`, `bugs/`, `learnings/`, `patterns/`
+- Turn raw work into structured entries in `BRAIN/decisions/`, `bugs/`, `learnings/`, `patterns/`, `reference/`, `specs/`
 - Prepare high-quality handoffs for other models
 - Consolidate scattered notes into clean, durable knowledge
 - Keep `BRAIN/INDEX.md` current so `brain load` stays fast
