@@ -30,6 +30,8 @@ Act at these points without waiting to be asked:
 | A hard bug was just solved | `bugs/` entry | draft, then confirm |
 | Chose X over Y, with a real trade-off | `decisions/` entry | draft, then confirm |
 | Surprising or non-obvious discovery | `learnings/` entry | draft, then confirm |
+| An external fact worth remembering (repo location, API/vendor note) | `reference/` entry | write |
+| A spec/worksheet exists but isn't a settled decision yet | `specs/` entry | write |
 | A task or phase just completed | checkpoint | write |
 | About to do something risky (migration, large refactor, reset) | checkpoint first | write |
 | Context is filling up / before compaction | checkpoint | write |

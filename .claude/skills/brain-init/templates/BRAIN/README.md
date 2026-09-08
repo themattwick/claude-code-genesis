@@ -15,6 +15,8 @@ Native memory systems in AI coding tools do not communicate well with each other
 - `checkpoints/` — Lightweight mid-session notes during long work
 - `sessions/` — Larger session summaries and retrospectives
 - `handoffs/` — Cross-model transfer documents (handing work to another AI)
+- `reference/` — External-fact lookups: where things live, API/vendor notes, glossaries — not decisions, just facts to look up
+- `specs/` — Working documents: specs, worksheets, drafts-in-progress — not yet a settled decision
 
 ## Rules
 
