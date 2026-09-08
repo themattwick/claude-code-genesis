@@ -17,6 +17,7 @@
 - `checkpoints/` — Lightweight notes during long work (every 60-90 min recommended)
 - `sessions/` — Bigger session retrospectives
 - `handoffs/` — Cross-model transfer documents
+- `glossary/` — Domain terms, one file per term
 
 ## Rules for AI assistants
 1. Check `BRAIN/` at the start of any serious work.

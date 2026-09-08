@@ -16,7 +16,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from _brain_common import collect_entries, find_brain_root
+from _brain_common import collect_entries, find_brain_root, order_types, pluralize_type
 
 
 def render_table(entries: list[dict]) -> str:
@@ -50,14 +50,16 @@ def render_index(entries: list[dict]) -> str:
     out.append(f"- **Active entries:** {len(active)}  ·  "
                f"**Retired:** {len(retired)}\n")
 
-    # Active entries grouped by type
+    # Active entries grouped by type. Known types render in a preferred
+    # order; any other type (a typo, or a new one like "glossary") still
+    # gets its own section instead of silently vanishing from the index.
     out.append("## Active knowledge\n")
-    for t in ["decision", "learning", "pattern", "bug", "handoff",
-              "session", "checkpoint"]:
+    present_types = {e["type"] for e in active}
+    for t in order_types(present_types):
         group = [e for e in active if e["type"] == t]
         if not group:
             continue
-        out.append(f"### {t.capitalize()}s ({len(group)})\n")
+        out.append(f"### {pluralize_type(t)} ({len(group)})\n")
         out.append(render_table(group) + "\n")
 
     # Retired (superseded / archived) — kept out of the way

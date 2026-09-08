@@ -34,6 +34,7 @@ BRAIN/
 ├── bugs/                  # Hard cases encountered
 ├── learnings/             # Extracted insights
 ├── patterns/              # Reusable patterns
+├── glossary/              # Domain terms, one file per term
 └── handoffs/              # Cross-model transfer docs
 ```
 

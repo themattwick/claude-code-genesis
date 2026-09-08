@@ -12,16 +12,37 @@ Zero external dependencies, so the scripts stay portable.
 import re
 from pathlib import Path
 
-ENTRY_DIRS = ["handoffs", "checkpoints", "sessions",
-              "decisions", "bugs", "learnings", "patterns"]
+ENTRY_DIRS = ["handoffs", "checkpoints", "sessions", "decisions",
+              "bugs", "learnings", "patterns", "glossary"]
 SKIP_FILES = {"INDEX.md", "README.md", "QUICK-REFERENCE.md"}
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
-VALID_TYPES = {"checkpoint", "session", "decision",
-               "bug", "learning", "pattern", "handoff"}
+VALID_TYPES = {"checkpoint", "session", "decision", "bug",
+               "learning", "pattern", "handoff", "glossary"}
 VALID_STATUSES = {"active", "superseded", "archived"}
 
 LINK_FIELDS = ("links", "supersedes", "superseded_by")
+
+# Section order in the generated index. Reference material (decisions,
+# glossary) surfaces before working history. Any type not listed here still
+# gets its own section — appended alphabetically — instead of silently
+# vanishing from the index.
+PREFERRED_TYPE_ORDER = ["decision", "glossary", "learning", "pattern",
+                        "bug", "handoff", "session", "checkpoint"]
+
+# Section-header plurals that don't follow the plain "+s" rule.
+TYPE_PLURALS = {"glossary": "Glossary terms"}
+
+
+def order_types(present_types) -> list[str]:
+    """Preferred types first (if present), then any others alphabetically."""
+    ordered = [t for t in PREFERRED_TYPE_ORDER if t in present_types]
+    ordered += sorted(set(present_types) - set(ordered))
+    return ordered
+
+
+def pluralize_type(entry_type: str) -> str:
+    return TYPE_PLURALS.get(entry_type, f"{entry_type.capitalize()}s")
 
 
 def find_brain_root(start: Path) -> Path | None:

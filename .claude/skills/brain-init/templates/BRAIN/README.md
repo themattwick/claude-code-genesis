@@ -15,6 +15,9 @@ Native memory systems in AI coding tools do not communicate well with each other
 - `checkpoints/` — Lightweight mid-session notes during long work
 - `sessions/` — Larger session summaries and retrospectives
 - `handoffs/` — Cross-model transfer documents (handing work to another AI)
+- `glossary/` — Domain terms, one file per term. A redefined term gets a new
+  entry with `supersedes:` rather than an edit in place, so the history of how
+  a concept's meaning drifted is kept, not overwritten.
 
 ## Rules
 

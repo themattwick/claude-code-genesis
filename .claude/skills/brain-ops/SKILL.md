@@ -2,12 +2,14 @@
 name: brain-ops
 description: >
   Operational engine of Project BRAIN: writing checkpoints, preparing cross-model
-  handoffs, consolidating raw notes into durable knowledge, retiring stale entries,
-  and running hygiene checks.
+  handoffs, consolidating raw notes into durable knowledge, defining domain terms,
+  retiring stale entries, and running hygiene checks.
   Use when the user says "brain checkpoint", "brain handoff", "brain hygiene",
-  "brain consolidate", "brain organize", "brain report" or "brain index" — and also
-  at natural capture points: a hard bug was just solved, a decision was made between
-  alternatives, context is filling up, or work is about to move to another model.
+  "brain consolidate", "brain organize", "brain report", "brain index", "brain
+  define" or "brain glossary" — and also at natural capture points: a hard bug
+  was just solved, a decision was made between alternatives, a domain term was
+  coined or redefined, context is filling up, or work is about to move to
+  another model.
 metadata:
   short-description: "BRAIN ops engine: capture, consolidate, retire, verify"
   category: "workflow"
@@ -30,6 +32,7 @@ Act at these points without waiting to be asked:
 | A hard bug was just solved | `bugs/` entry | draft, then confirm |
 | Chose X over Y, with a real trade-off | `decisions/` entry | draft, then confirm |
 | Surprising or non-obvious discovery | `learnings/` entry | draft, then confirm |
+| A domain term was coined, clarified, or redefined | `glossary/` entry | draft, then confirm |
 | A task or phase just completed | checkpoint | write |
 | About to do something risky (migration, large refactor, reset) | checkpoint first | write |
 | Context is filling up / before compaction | checkpoint | write |
@@ -112,6 +115,23 @@ durable knowledge **and retires the source**. Both halves are required.
 
 Output: what was created and what was archived, with counts and paths.
 
+### define
+
+Trigger: `brain define <term>` or `brain glossary`, or a term was coined,
+clarified, or redefined during the session.
+
+1. Check whether `BRAIN/glossary/` already has an **active** entry for this term
+   (search by title, not just filename — terms drift in phrasing).
+2. **New term:** write `BRAIN/glossary/YYYY-MM-DD-<term-slug>.md` from
+   `templates/entries/glossary-term.md`.
+3. **Redefining an existing term:** do not edit the old entry in place. Write a
+   new one with `supersedes: glossary/<old-file>.md`, and set
+   `status: superseded` on the old entry. The record of how the term's meaning
+   drifted is itself useful.
+4. Regenerate the index.
+
+Output: the path written (and, if a redefinition, what changed), in one line.
+
 ### hygiene
 
 Trigger: `brain hygiene`, before a handoff, or periodically.
@@ -151,6 +171,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `templates/checkpoint-template.md` | Shape of a checkpoint |
 | `templates/handoff-template.md` | Cross-model handoff document |
 | `templates/entries/bug-hard-case.md` | Hard bug write-ups during consolidation |
+| `templates/entries/glossary-term.md` | Domain term definitions |
 | `templates/QUICK-REFERENCE.md` | Day-to-day cheat sheet |
 
 ## Scripts
