@@ -17,7 +17,8 @@
 - `checkpoints/` — Lightweight notes during long work (every 60-90 min recommended)
 - `sessions/` — Bigger session retrospectives
 - `handoffs/` — Cross-model transfer documents
-- `reference/` — External facts to look up (repo locations, API/vendor notes, glossaries)
+- `glossary/` — Domain terms, one file per term
+- `reference/` — External facts to look up (repo locations, API/vendor notes)
 - `specs/` — Working documents: specs, worksheets, drafts not yet settled into a decision
 
 ## Rules for AI assistants

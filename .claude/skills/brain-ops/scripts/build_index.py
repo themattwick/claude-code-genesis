@@ -51,8 +51,8 @@ def render_index(entries: list[dict]) -> str:
                f"**Retired:** {len(retired)}\n")
 
     # Active entries grouped by type. Known types render in a preferred
-    # order; anything else (typos, new types like "worksheet") still gets
-    # its own section instead of silently vanishing from the index.
+    # order; any other type (a typo, or a new one like "glossary") still
+    # gets its own section instead of silently vanishing from the index.
     out.append("## Active knowledge\n")
     present_types = {e["type"] for e in active}
     for t in order_types(present_types):

@@ -30,6 +30,11 @@ build/
 # Checkpoints (local only)
 .claude/checkpoints/
 
+# Per-repo config for third-party skill plugins (e.g. mattpocock-skills'
+# setup-matt-pocock-skills output). Personal/local — regenerate by re-running
+# the plugin's setup skill; not part of the public Genesis repo.
+docs/agents/
+
 # Temporary
 tmp/
 temp/

@@ -8,11 +8,12 @@ it makes entries filterable, gives them a lifecycle, and powers `BRAIN/INDEX.md`
 
 ```yaml
 ---
-type: decision          # checkpoint | session | decision | bug | learning | pattern | handoff
+type: decision          # checkpoint | session | decision | bug | learning | pattern | handoff | glossary
 status: active          # active | superseded | archived
 date: 2026-06-12        # ISO date (YYYY-MM-DD)
 tags: [auth, jwt]       # free-form, lowercase
 supersedes: 2026-05-01-old-auth.md     # optional — this entry replaces that one
+superseded_by: 2026-07-01-new-auth.md  # optional — set on the old entry, points forward
 links: [bugs/2026-06-11-n-plus-1.md]   # optional — related entries
 ---
 ```
@@ -26,6 +27,7 @@ links: [bugs/2026-06-11-n-plus-1.md]   # optional — related entries
 | `date` | recommended | ISO date. Falls back to the date parsed from the filename. |
 | `tags` | optional | Lowercase keywords for filtering and (later) search. |
 | `supersedes` | optional | Filename of the entry this one replaces. Pair with `status: superseded` on the old entry. |
+| `superseded_by` | optional | Set on the old entry, pointing forward to its replacement. `brain hygiene` flags a mismatch between the two sides. |
 | `links` | optional | Related entries, as `folder/filename.md` paths. The basis for the future backlink graph. |
 
 ## Lifecycle
@@ -39,6 +41,11 @@ Entries move through states rather than being deleted:
 `status` is how hot/cold separation works **without** moving files into new
 folders — the flat directory structure stays portable, and the index does the
 sorting.
+
+This applies beyond decisions. A `glossary/` entry whose meaning changes follows
+the same pattern: don't edit the old definition in place, write a new entry with
+`supersedes:`, and set `status: superseded` on the old one. The history of how a
+term's meaning drifted is worth keeping, not overwriting.
 
 ## Migrating existing entries
 

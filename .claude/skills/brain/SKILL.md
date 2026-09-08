@@ -48,6 +48,12 @@ entries. See `docs/FRONTMATTER.md` for the entry format.
 
 Review raw material in `BRAIN/checkpoints/` and `BRAIN/sessions/`, then synthesize into structured entries in `BRAIN/decisions/`, `BRAIN/learnings/`, `BRAIN/bugs/`, `BRAIN/patterns/`, `BRAIN/reference/`, or `BRAIN/specs/`.
 
+### Glossary
+- `brain define <term>` / `brain glossary`
+
+Write or redefine a domain-term entry in `BRAIN/glossary/`. A redefinition never
+edits in place — it supersedes the old entry so the drift in meaning is kept.
+
 ## Routing Table
 
 | Phrase | Routes to |
@@ -57,6 +63,7 @@ Review raw material in `BRAIN/checkpoints/` and `BRAIN/sessions/`, then synthesi
 | "brain load", "brain status", "brain briefing" | Read `BRAIN/INDEX.md` |
 | "brain index", "brain reindex" | `brain-ops` (build_index.py) |
 | "brain consolidate", "brain organize" | `brain-ops` |
+| "brain define", "brain glossary" | `brain-ops` |
 | "brain ..." (general) | Decide best action |
 
 ## Related Skills
