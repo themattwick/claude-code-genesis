@@ -46,7 +46,7 @@ entries. See `docs/FRONTMATTER.md` for the entry format.
 ### Consolidation
 - `brain consolidate`
 
-Review raw material in `BRAIN/checkpoints/` and `BRAIN/sessions/`, then synthesize into structured entries in `BRAIN/decisions/`, `BRAIN/learnings/`, `BRAIN/bugs/`, or `BRAIN/patterns/`.
+Review raw material in `BRAIN/checkpoints/` and `BRAIN/sessions/`, then synthesize into structured entries in `BRAIN/decisions/`, `BRAIN/learnings/`, `BRAIN/bugs/`, `BRAIN/patterns/`, `BRAIN/reference/`, or `BRAIN/specs/`.
 
 ### Glossary
 - `brain define <term>` / `brain glossary`

@@ -18,6 +18,8 @@
 - `sessions/` — Bigger session retrospectives
 - `handoffs/` — Cross-model transfer documents
 - `glossary/` — Domain terms, one file per term
+- `reference/` — External facts to look up (repo locations, API/vendor notes)
+- `specs/` — Working documents: specs, worksheets, drafts not yet settled into a decision
 
 ## Rules for AI assistants
 1. Check `BRAIN/` at the start of any serious work.

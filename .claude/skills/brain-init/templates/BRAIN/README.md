@@ -18,6 +18,8 @@ Native memory systems in AI coding tools do not communicate well with each other
 - `glossary/` — Domain terms, one file per term. A redefined term gets a new
   entry with `supersedes:` rather than an edit in place, so the history of how
   a concept's meaning drifted is kept, not overwritten.
+- `reference/` — External-fact lookups: where things live, API/vendor notes — not decisions, just facts to look up
+- `specs/` — Working documents: specs, worksheets, drafts-in-progress — not yet a settled decision
 
 ## Rules
 

@@ -12,23 +12,23 @@ Zero external dependencies, so the scripts stay portable.
 import re
 from pathlib import Path
 
-ENTRY_DIRS = ["handoffs", "checkpoints", "sessions", "decisions",
-              "bugs", "learnings", "patterns", "glossary"]
+ENTRY_DIRS = ["handoffs", "checkpoints", "sessions", "decisions", "bugs",
+              "learnings", "patterns", "glossary", "reference", "specs"]
 SKIP_FILES = {"INDEX.md", "README.md", "QUICK-REFERENCE.md"}
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
-VALID_TYPES = {"checkpoint", "session", "decision", "bug",
-               "learning", "pattern", "handoff", "glossary"}
+VALID_TYPES = {"checkpoint", "session", "decision", "bug", "learning",
+               "pattern", "handoff", "glossary", "reference", "spec"}
 VALID_STATUSES = {"active", "superseded", "archived"}
 
 LINK_FIELDS = ("links", "supersedes", "superseded_by")
 
 # Section order in the generated index. Reference material (decisions,
-# glossary) surfaces before working history. Any type not listed here still
-# gets its own section — appended alphabetically — instead of silently
-# vanishing from the index.
-PREFERRED_TYPE_ORDER = ["decision", "glossary", "learning", "pattern",
-                        "bug", "handoff", "session", "checkpoint"]
+# glossary, specs, reference) surfaces before working history. Any type not
+# listed here still gets its own section — appended alphabetically —
+# instead of silently vanishing from the index.
+PREFERRED_TYPE_ORDER = ["decision", "glossary", "spec", "learning", "pattern",
+                        "bug", "reference", "handoff", "session", "checkpoint"]
 
 # Section-header plurals that don't follow the plain "+s" rule.
 TYPE_PLURALS = {"glossary": "Glossary terms"}

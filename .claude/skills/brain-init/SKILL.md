@@ -35,6 +35,8 @@ BRAIN/
 ├── learnings/             # Extracted insights
 ├── patterns/              # Reusable patterns
 ├── glossary/              # Domain terms, one file per term
+├── reference/             # External-fact lookups (repo locations, API notes)
+├── specs/                 # Specs, worksheets, drafts — working documents, not verdicts
 └── handoffs/              # Cross-model transfer docs
 ```
 
