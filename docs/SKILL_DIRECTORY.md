@@ -26,7 +26,8 @@ Complete catalog of all skills in the Genesis hub.
 **Daily BRAIN operations** — Checkpoints, handoffs, hygiene, consolidation.
 
 - Trigger: "brain checkpoint", "brain handoff", "brain hygiene", "brain consolidate"
-- Scripts: `create_checkpoint.py` (timestamped checkpoint files)
+- Scripts: `create_checkpoint.py` (timestamped entries), `build_index.py`
+  (regenerate `INDEX.md`), `brain_hygiene.py` (deterministic health report)
 - Location: `.claude/skills/brain-ops/`
 
 ---

@@ -12,91 +12,11 @@ Zero external dependencies — a minimal frontmatter parser keeps this portable.
 Usage:
     python build_index.py [path-to-project-root]
 """
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
 
-ENTRY_DIRS = ["handoffs", "checkpoints", "sessions",
-              "decisions", "bugs", "learnings", "patterns", "reference", "specs"]
-PREFERRED_TYPE_ORDER = ["decision", "spec", "learning", "pattern", "bug",
-                         "reference", "handoff", "session", "checkpoint"]
-SKIP_FILES = {"INDEX.md", "README.md", "QUICK-REFERENCE.md"}
-DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
-
-
-def find_brain_root(start: Path) -> Path | None:
-    """Locate a BRAIN/ directory at or above the start path."""
-    candidates = [start / "BRAIN", start]
-    candidates += [p / "BRAIN" for p in start.parents]
-    for c in candidates:
-        if (c / "checkpoints").exists() or c.name == "BRAIN" and c.exists():
-            return c
-    return None
-
-
-def parse_frontmatter(text: str) -> dict:
-    """Parse a leading --- ... --- YAML-ish block. Supports scalars and [lists]."""
-    if not text.startswith("---"):
-        return {}
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}
-    block = text[3:end].strip("\n")
-    meta: dict = {}
-    for line in block.splitlines():
-        if ":" not in line:
-            continue
-        key, _, value = line.partition(":")
-        key, value = key.strip(), value.strip()
-        if value.startswith("[") and value.endswith("]"):
-            items = [v.strip() for v in value[1:-1].split(",") if v.strip()]
-            meta[key] = items
-        else:
-            meta[key] = value
-    return meta
-
-
-def extract_title(text: str, fallback: str) -> str:
-    """First markdown H1, else a humanized filename."""
-    for line in text.splitlines():
-        if line.startswith("# "):
-            return line[2:].strip()
-    return fallback
-
-
-def humanize(filename: str) -> str:
-    stem = re.sub(r"^\d{4}-\d{2}-\d{2}(-\d{4})?-", "", Path(filename).stem)
-    return stem.replace("-", " ")
-
-
-def read_entry(path: Path, folder: str) -> dict:
-    """Build a normalized entry record, applying fallbacks for missing fields."""
-    text = path.read_text(encoding="utf-8", errors="replace")
-    meta = parse_frontmatter(text)
-    date_match = DATE_RE.search(path.name)
-    return {
-        "type": meta.get("type", folder.rstrip("s")),
-        "status": meta.get("status", "active"),
-        "date": meta.get("date") or (date_match.group(1) if date_match else "—"),
-        "tags": meta.get("tags", []),
-        "title": extract_title(text, humanize(path.name)),
-        "path": f"{folder}/{path.name}",
-        "has_frontmatter": bool(meta),
-    }
-
-
-def collect_entries(brain_root: Path) -> list[dict]:
-    entries = []
-    for folder in ENTRY_DIRS:
-        d = brain_root / folder
-        if not d.exists():
-            continue
-        for path in sorted(d.glob("*.md")):
-            if path.name in SKIP_FILES:
-                continue
-            entries.append(read_entry(path, folder))
-    return entries
+from _brain_common import collect_entries, find_brain_root, order_types, pluralize_type
 
 
 def render_table(entries: list[dict]) -> str:
@@ -135,13 +55,11 @@ def render_index(entries: list[dict]) -> str:
     # its own section instead of silently vanishing from the index.
     out.append("## Active knowledge\n")
     present_types = {e["type"] for e in active}
-    ordered_types = [t for t in PREFERRED_TYPE_ORDER if t in present_types]
-    ordered_types += sorted(present_types - set(ordered_types))
-    for t in ordered_types:
+    for t in order_types(present_types):
         group = [e for e in active if e["type"] == t]
         if not group:
             continue
-        out.append(f"### {t.capitalize()}s ({len(group)})\n")
+        out.append(f"### {pluralize_type(t)} ({len(group)})\n")
         out.append(render_table(group) + "\n")
 
     # Retired (superseded / archived) — kept out of the way
