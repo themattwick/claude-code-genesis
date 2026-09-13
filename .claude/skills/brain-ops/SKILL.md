@@ -186,6 +186,41 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `scripts/precompact_checkpoint.py` | **Hook `PreCompact`** — writes the deterministic half of a checkpoint before compaction |
 | `scripts/sessionstart_finish_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
 | `scripts/test_hooks.py` | **Proof the hooks work.** Exit 1 if anything fails |
+| `scripts/test_index.py` | **Proof the index is complete.** Exit 1 if anything fails |
+
+### Nested collections, and material that is not an entry
+
+Entries are collected **recursively**, so a folder holding a nested collection — a
+wayfinder map with its tickets, a spec with its research notes — is indexed like any
+other. Each collection renders as its own subsection rather than as loose rows, so a
+map with twenty tickets stays readable instead of flooding the table for its type.
+
+⚠️ **The first version globbed one level deep.** A nested collection was indexed as
+**zero** entries and nothing said so. Measured on a real base: 136 files, 64 indexed,
+72 invisible — and the printed count looked plausible, so the gap survived every run
+since the first. An index that silently omits half a folder is worse than no index.
+
+Not everything under `BRAIN/` is an entry, though. Sample output, prototypes and
+imported documents live there as **evidence attached to an entry**. Drop a
+`.not-brain-entries` file in such a directory and every tool skips it, and everything
+below it:
+
+```
+BRAIN/specs/my-map/prototype/WYNIK.md          <- an entry: the conclusion
+BRAIN/specs/my-map/prototype/bundle/           <- material
+BRAIN/specs/my-map/prototype/bundle/.not-brain-entries
+```
+
+**Why a marker and not a name pattern or a type allowlist.** A pattern like
+`prototype*` stops working the day someone names a directory differently, and skipping
+unknown *types* would also silence the case the check exists for — a real entry with a
+typo in its type. A marker is visible when you open the directory and says what it
+means. Measured: 47 prototype files written in a different format produced **50 MEDIUM
+false positives**; with markers the same base reports 4 findings, all genuine.
+
+⚠️ **Keep entries and material at different levels.** Where a conclusion file sat
+beside the sample it described, the marker could not separate them — the material had
+to move into its own subdirectory first.
 
 ### The compaction hook pair
 

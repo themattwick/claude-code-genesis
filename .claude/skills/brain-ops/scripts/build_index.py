@@ -27,6 +27,35 @@ def render_table(entries: list[dict]) -> str:
     return "\n".join(rows)
 
 
+def render_type_section(entries: list[dict]) -> str:
+    """One type's entries: the loose ones as a table, each nested collection
+    as its own subsection.
+
+    Nesting is not cosmetic here. A wayfinder map with twenty tickets would
+    otherwise contribute twenty rows to a flat table, in date order, mixed in
+    with unrelated entries — the collection stops being legible exactly when
+    it gets big enough to need an index. Grouping keeps a collection readable
+    and keeps one large collection from burying every loose entry beside it.
+    """
+    loose = [e for e in entries if not e["group"]]
+    out = []
+    if loose:
+        out.append(render_table(loose) + "\n")
+
+    grouped: dict[str, list[dict]] = {}
+    for e in entries:
+        if e["group"]:
+            # Group by the FIRST path segment, so "podzial-domen" and
+            # "podzial-domen/issues" stay one collection rather than two.
+            grouped.setdefault(e["group"].split("/")[0], []).append(e)
+
+    for name in sorted(grouped):
+        members = grouped[name]
+        out.append(f"#### `{name}/` ({len(members)})\n")
+        out.append(render_table(members) + "\n")
+    return "\n".join(out)
+
+
 def render_index(entries: list[dict]) -> str:
     active = [e for e in entries if e["status"] == "active"]
     retired = [e for e in entries if e["status"] != "active"]
@@ -60,7 +89,7 @@ def render_index(entries: list[dict]) -> str:
         if not group:
             continue
         out.append(f"### {pluralize_type(t)} ({len(group)})\n")
-        out.append(render_table(group) + "\n")
+        out.append(render_type_section(group))
 
     # Retired (superseded / archived) — kept out of the way
     if retired:
