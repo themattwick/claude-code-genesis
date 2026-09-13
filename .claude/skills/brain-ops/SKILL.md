@@ -37,7 +37,7 @@ Act at these points without waiting to be asked:
 | A spec/worksheet exists but isn't a settled decision yet | `specs/` entry | write |
 | A task or phase just completed | checkpoint | write |
 | About to do something risky (migration, large refactor, reset) | checkpoint first | write |
-| Context is filling up / before compaction | checkpoint | write |
+| Context is filling up / before compaction | checkpoint | write — **hook-driven**, see Scripts |
 | End of session, or handing to another model | handoff | write |
 | Many active checkpoints, or hygiene flags stale ones | consolidate | propose |
 
@@ -183,6 +183,58 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `scripts/create_checkpoint.py` | Timestamped checkpoint with frontmatter |
 | `scripts/build_index.py` | Regenerate `BRAIN/INDEX.md` |
 | `scripts/brain_hygiene.py` | Deterministic health report (`--days`, `--strict`) |
+| `scripts/precompact_checkpoint.py` | **Hook `PreCompact`** — writes the deterministic half of a checkpoint before compaction |
+| `scripts/sessionstart_dokoncz_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
+| `scripts/test_hooks.py` | **Proof the hooks work.** Exit 1 if anything fails |
+
+### The compaction hook pair
+
+The capture trigger *"context is filling up / before compaction"* above had nothing
+firing it. Auto-compaction does not announce itself, so nobody remembers in time.
+Two hooks cover it, in **two layers that are deliberately separate**:
+
+| Layer | Who produces it | Reliable |
+|---|---|---|
+| skeleton: verbatim user requests, files touched, commands run, git state | the `PreCompact` script | **always** |
+| judgement: what was settled, what is open, what must not be undone | the model, after compaction | best effort |
+
+⚠️ **A hook cannot invoke a skill, and cannot make the model write anything.** It is a
+shell command, not a conversational turn. So layer 2 is a *request*, injected by the
+second hook — and layer 1 is built to be worth having on its own when that request is
+ignored.
+
+⚠️ **`PreCompact` stdout never reaches the model.** Only `SessionStart`,
+`UserPromptSubmit`, `UserPromptExpansion` and `PostModelSwitch` inject context. Asking
+the model for anything from `PreCompact` fails *silently*: the hook runs, exits 0, and
+the message goes nowhere. Hence `SessionStart` with matcher `compact`, which fires right
+*after* compaction — with the side benefit that the model then has a fresh summary in
+front of it.
+
+⚠️ **Neither script may call `os.getcwd()`.** The hooks are registered globally, so they
+fire in every project on the machine, and the process working directory is wherever the
+shell happens to stand — not the session's project. With `os.getcwd()` in the lookup
+chain, a session in project A wrote its checkpoint into project B's `BRAIN/`. The only
+admissible sources are `CLAUDE_PROJECT_DIR` and the `cwd` handed in on stdin. No `BRAIN/`
+there means **do nothing** — that is the correct outcome, not a reason to look elsewhere.
+
+Both hooks exit 0 whatever happens: one that breaks a session gets switched off after the
+first time and then saves nothing ever again. `SessionStart` stays **silent** when no
+skeleton is waiting, because noise is the surest way to make a control stop being read.
+
+**Because both always exit 0, the exit code proves nothing.** `test_hooks.py` checks the
+effect instead: whether a file appeared, *which project* it appeared in, what it contains,
+and that a second compaction does not overwrite the first. It found both of those bugs.
+
+### Installing them
+
+`install-global.ps1` at the root of this repo links every `brain*` skill into
+`~/.claude/skills` as a junction and registers both hooks. Linking, not copying: one copy
+of the skill, in this git working tree, available in every project, updated everywhere by
+`git pull`.
+
+⚠️ **The hooks hold absolute paths into this clone.** Move or rename the clone and they
+break — while still firing and still exiting 0, so nothing appears to fail. Re-run the
+installer after any move, then `test_hooks.py`.
 
 Entries carry a small optional frontmatter block (`type`, `status`, `tags`,
 `links`, `supersedes`) — see `docs/FRONTMATTER.md`. Every tool degrades gracefully
