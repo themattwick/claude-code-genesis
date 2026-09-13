@@ -184,7 +184,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `scripts/build_index.py` | Regenerate `BRAIN/INDEX.md` |
 | `scripts/brain_hygiene.py` | Deterministic health report (`--days`, `--strict`) |
 | `scripts/precompact_checkpoint.py` | **Hook `PreCompact`** — writes the deterministic half of a checkpoint before compaction |
-| `scripts/sessionstart_dokoncz_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
+| `scripts/sessionstart_finish_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
 | `scripts/test_hooks.py` | **Proof the hooks work.** Exit 1 if anything fails |
 
 ### The compaction hook pair
@@ -223,7 +223,22 @@ skeleton is waiting, because noise is the surest way to make a control stop bein
 
 **Because both always exit 0, the exit code proves nothing.** `test_hooks.py` checks the
 effect instead: whether a file appeared, *which project* it appeared in, what it contains,
-and that a second compaction does not overwrite the first. It found both of those bugs.
+and that a second compaction does not overwrite the first. It found two bugs that way.
+
+It missed a third, and how it missed it is worth keeping. On a real compaction the
+checkpoint came out with **0 files and 0 user requests** while the transcript sat right
+there: `sys.stdin.read()` decodes with the system code page on Windows, so a session
+path holding any non-ASCII character turned into mojibake and the file "did not exist".
+
+The test could not see it for two reasons, and **both had to be fixed**:
+
+- it built its own transcript under an **ASCII path**, and
+- `json.dumps` defaults to `ensure_ascii=True`, so the bytes it fed to the hook were
+  pure ASCII — every decoder reads those correctly, and the case passed even with the
+  bug deliberately reinstated.
+
+⚠️ **A test that has never failed proves nothing.** Case D was only trusted after the
+bug was put back and it actually went red. Do the same to any case you add here.
 
 ### Installing them
 

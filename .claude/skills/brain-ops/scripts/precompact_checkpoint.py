@@ -1,248 +1,280 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Hook PreCompact — ratuje ciaglosc, zanim kompaktowanie zabierze kontekst.
+"""PreCompact hook - rescues continuity before compaction takes the context away.
 
-Rejestrowany w ~/.claude/settings.json jako PreCompact. Czyta JSON ze stdin.
+Registered in ~/.claude/settings.json as PreCompact. Reads JSON on stdin.
 
-PO CO. `brain-ops` wymienia "context is filling up / before compaction" jako moment,
-w ktorym nalezy zapisac checkpoint — ale nic tego nie wyzwalalo. Przy autokompakcie
-nikt o tym nie pamieta, bo autokompakt nie pyta o zgode i nie zapowiada sie.
+WHY. `brain-ops` lists "context is filling up / before compaction" as a moment that
+calls for a checkpoint - but nothing was firing it. Nobody remembers in time for an
+auto-compaction, because auto-compaction neither asks nor announces itself.
 
-DWIE WARSTWY, CELOWO ROZDZIELONE:
+TWO LAYERS, DELIBERATELY SEPARATE:
 
-  1. DETERMINISTYCZNA — ten skrypt sam wyciaga z transkryptu to, czego model nie
-     musi pamietac, zeby to zapisac: polecenia uzytkownika, dotkniete pliki,
-     uruchomione komendy, stan gita. Dziala ZAWSZE, tez gdy model jest w polowie
-     tury i nikt go o nic nie pyta.
+  1. DETERMINISTIC - this script pulls from the transcript everything that does not
+     need the model's memory to be written down: user requests, files touched,
+     commands run, git state. It works ALWAYS, including mid-turn when nobody is
+     asking the model for anything.
 
-  2. OSADOWA — uzupelnienie tego, czego wyliczyc sie nie da: co ustalono, co zostalo
-     otwarte, czego nie wolno cofnac. Tego ten skrypt NIE robi i nie moze.
+  2. JUDGEMENT - what cannot be computed: what was settled, what is open, what must
+     not be undone. This script does NOT do that, and cannot.
 
-⚠️ STDOUT Z PreCompact NIE DOCIERA DO MODELU. Sprawdzone w dokumentacji Anthropic,
-nie zalozone: kontekst wstrzykuja wylacznie `SessionStart`, `UserPromptSubmit`,
-`UserPromptExpansion` i `PostModelSwitch`. PreCompact nie jest na tej liscie, wiec
-proba poproszenia stad modelu o cokolwiek bylaby cicha porazka — hook by sie wykonal,
-komunikat poszedlby w pustke, a checkpoint zostalby pusty i nikt by sie nie dowiedzial.
+WARNING: PreCompact STDOUT NEVER REACHES THE MODEL. Checked against Anthropic's
+documentation, not assumed: only `SessionStart`, `UserPromptSubmit`,
+`UserPromptExpansion` and `PostModelSwitch` inject context. PreCompact is not on that
+list, so asking the model for anything from here would fail SILENTLY - the hook runs,
+the message goes nowhere, the checkpoint stays empty and nobody finds out.
 
-Dlatego warstwe 2 wyzwala DRUGI hook: `SessionStart` z matcherem `compact`, czyli
-juz PO kompaktowaniu (`sessionstart_dokoncz_checkpoint.py`). To jest udokumentowana
-droga wstrzykniecia kontekstu i ma te przewage, ze model dostaje polecenie, gdy ma
-swieze streszczenie przed soba — a nie w polowie przerwanej tury.
+Layer 2 is therefore fired by a SECOND hook: `SessionStart` with matcher `compact`,
+i.e. just AFTER compaction (`sessionstart_finish_checkpoint.py`). That is the
+documented injection route, with the side benefit that the model gets the request
+while a fresh summary is in front of it - not mid-interrupted-turn.
 
-⚠️ NIGDY NIE PRZERYWA KOMPAKTOWANIA. Kazdy blad jest lapany, kod wyjscia zawsze 0.
-Hook, ktory psuje sesje, zostanie wylaczony po pierwszym razie i nie uratuje juz nic.
+WARNING: IT NEVER INTERRUPTS COMPACTION. Every error is caught, the exit code is
+always 0. A hook that breaks a session gets switched off after the first time and
+then saves nothing ever again.
 """
 import io
 import json
 import os
-import re
 import subprocess
 import sys
 from datetime import datetime
 
-# Konsola Windows domyslnie nie jest UTF-8, a wyjscie hooka trafia do Claude Code.
-# Bez tego polskie znaki wychodza jako krzaki — sprawdzone, nie zalozone.
+# The Windows console is not UTF-8 by default, and this hook's output goes to
+# Claude Code. Without this, non-ASCII characters come out as mojibake.
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 except Exception:
     pass
 
-MAKS_POLECEN = 40          # ostatnie N polecen uzytkownika
-MAKS_ZNAKOW_POLECENIA = 220
-MAKS_PLIKOW = 60
+
+def read_stdin():
+    """WARNING: NOT sys.stdin.read().
+
+    Claude Code hands over JSON in UTF-8, but on Windows sys.stdin decodes it with
+    the system code page (cp1250/cp1252). A path holding any non-ASCII character then
+    falls apart silently: a surname spelled with an umlaut or an ogonek turns into
+    mojibake, os.path.isfile() says it is not there, and the hook reports an empty
+    transcript instead of an encoding error.
+
+    Caught on a REAL compaction, not in a test: the checkpoint came out with 0 files
+    and 0 user requests while the transcript was sitting right there. The test suite
+    missed it because it built its own transcript under an ASCII path - and, worse,
+    because it serialised its stdin with ensure_ascii=True, so the bytes it sent were
+    pure ASCII and any decoder read them correctly. See test_hooks.py, case D.
+    """
+    try:
+        return sys.stdin.buffer.read().decode("utf-8", "replace")
+    except Exception:
+        try:
+            return sys.stdin.read()
+        except Exception:
+            return ""
 
 
-def bezpiecznie(f, domyslne):
+MAX_REQUESTS = 40          # keep the last N user requests
+MAX_REQUEST_CHARS = 220
+MAX_FILES = 60
+
+SUFFIX = "-before-compaction.md"
+MARKER = "TO BE FILLED IN"
+
+
+def safely(f, fallback):
     try:
         return f()
     except Exception:
-        return domyslne
+        return fallback
 
 
-def znajdz_brain(cwd):
-    """Tylko projekt, ktory hook nam podal. NIGDY os.getcwd().
+def find_brain(cwd):
+    """Only the project the hook handed us. NEVER os.getcwd().
 
-    ⚠️ Hook jest zarejestrowany GLOBALNIE i odpala sie w kazdym projekcie. Katalog
-    roboczy procesu to nie jest projekt sesji — to katalog, w ktorym akurat stoi
-    powloka. Z os.getcwd() w liscie sesja obcego projektu zapisywala sie do BRAIN
-    zupelnie innego repozytorium. Zlapane testem 2026-09-13, przypadek B.
+    WARNING: the hook is registered GLOBALLY and fires in every project on the
+    machine. The process working directory is not the session's project - it is
+    wherever the shell happens to stand. With os.getcwd() in this lookup chain, a
+    session in project A wrote its checkpoint into project B's BRAIN/. Caught by
+    test case B.
+
+    No BRAIN/ here means DO NOTHING. That is the correct outcome, not a reason to
+    look somewhere else.
     """
-    kand = [os.environ.get("CLAUDE_PROJECT_DIR"), cwd]
-    for k in kand:
-        if not k:
+    for candidate in (os.environ.get("CLAUDE_PROJECT_DIR"), cwd):
+        if not candidate:
             continue
-        p = os.path.join(k, "BRAIN", "checkpoints")
-        if os.path.isdir(p):
-            return p
+        path = os.path.join(candidate, "BRAIN", "checkpoints")
+        if os.path.isdir(path):
+            return path
     return None
 
 
-def czytaj_transkrypt(sciezka):
-    """Wyciaga fakty, ktore da sie wyliczyc. Nie interpretuje niczego.
+def read_transcript(path):
+    """Extract the computable facts. Interpret nothing.
 
-    Piaty element wyniku to POWOD PUSTKI. Pierwsza wersja zwracala po cichu puste
-    listy, gdy transkryptu nie bylo — i checkpoint wygladal wtedy dokladnie tak samo
-    jak checkpoint z pustej sesji. Cicha awaria kontroli ciaglosci jest gorsza niz
-    brak kontroli, bo wyglada na dzialajaca.
+    The fifth element of the result is the REASON FOR EMPTINESS. The first version
+    returned empty lists silently when the transcript was missing - and the resulting
+    checkpoint looked exactly like a checkpoint from a session where nothing happened.
+    A continuity control that fails silently is worse than no control at all, because
+    it looks like it is working.
     """
-    polecenia, pliki, komendy, agenci = [], [], [], []
-    if not sciezka:
-        return polecenia, pliki, komendy, agenci, "hook nie podal sciezki transkryptu"
-    if not os.path.exists(sciezka):
-        return polecenia, pliki, komendy, agenci, "transkrypt nie istnieje: %s" % sciezka
-    wierszy = 0
-    for lin in io.open(sciezka, encoding="utf-8", errors="replace"):
-        wierszy += 1
+    requests, files, commands, agents = [], [], [], []
+    if not path:
+        return requests, files, commands, agents, "the hook passed no transcript path"
+    if not os.path.exists(path):
+        return requests, files, commands, agents, "transcript does not exist: %s" % path
+    lines = 0
+    for line in io.open(path, encoding="utf-8", errors="replace"):
+        lines += 1
         try:
-            o = json.loads(lin)
+            entry = json.loads(line)
         except Exception:
             continue
-        tresc = o.get("message", {}).get("content")
-        if o.get("type") == "user" and isinstance(tresc, str):
-            t = tresc.strip()
-            # Wiadomosci systemowe i przypomnienia nie sa poleceniami czlowieka.
-            if t and not t.startswith("<") and "system-reminder" not in t[:200]:
-                polecenia.append(t.replace("\n", " ")[:MAKS_ZNAKOW_POLECENIA])
-        if isinstance(tresc, list):
-            for b in tresc:
-                if not isinstance(b, dict) or b.get("type") != "tool_use":
+        content = entry.get("message", {}).get("content")
+        if entry.get("type") == "user" and isinstance(content, str):
+            text = content.strip()
+            # System messages and reminders are not requests from a human.
+            if text and not text.startswith("<") and "system-reminder" not in text[:200]:
+                requests.append(text.replace("\n", " ")[:MAX_REQUEST_CHARS])
+        if isinstance(content, list):
+            for block in content:
+                if not isinstance(block, dict) or block.get("type") != "tool_use":
                     continue
-                nazwa, we = b.get("name"), b.get("input") or {}
-                if nazwa in ("Write", "Edit", "NotebookEdit"):
-                    p = we.get("file_path")
-                    if p and p not in pliki:
-                        pliki.append(p)
-                elif nazwa == "Bash":
-                    opis = we.get("description") or (we.get("command") or "")[:80]
-                    if opis:
-                        komendy.append(opis)
-                elif nazwa == "Agent":
-                    agenci.append("%s: %s" % (we.get("subagent_type", "?"),
-                                              we.get("description", "")))
-    powod = "" if (polecenia or pliki or komendy) else (
-        "transkrypt ma %d wierszy, ale nie znaleziono w nim ani polecen, ani narzedzi"
-        % wierszy)
-    return polecenia, pliki, komendy, agenci, powod
+                name, args = block.get("name"), block.get("input") or {}
+                if name in ("Write", "Edit", "NotebookEdit"):
+                    p = args.get("file_path")
+                    if p and p not in files:
+                        files.append(p)
+                elif name == "Bash":
+                    label = args.get("description") or (args.get("command") or "")[:80]
+                    if label:
+                        commands.append(label)
+                elif name == "Agent":
+                    agents.append("%s: %s" % (args.get("subagent_type", "?"),
+                                              args.get("description", "")))
+    reason = "" if (requests or files or commands) else (
+        "the transcript has %d lines but holds neither requests nor tool calls" % lines)
+    return requests, files, commands, agents, reason
 
 
-def git(katalog, *arg):
-    return subprocess.run(["git"] + list(arg), cwd=katalog, capture_output=True,
+def git(directory, *args):
+    return subprocess.run(["git"] + list(args), cwd=directory, capture_output=True,
                           text=True, encoding="utf-8", errors="replace",
                           timeout=10).stdout.strip()
 
 
 def main():
-    surowe = bezpiecznie(lambda: sys.stdin.read(), "")
-    dane = bezpiecznie(lambda: json.loads(surowe), {}) or {}
-    cwd = dane.get("cwd")       # bez os.getcwd() — patrz znajdz_brain()
-    # Dokumentacja uzywa obu nazw dla tego samego pola — bierzemy ktorekolwiek jest.
-    wyzwalacz = dane.get("compaction_trigger") or dane.get("trigger") or "nieznany"
-    transkrypt = dane.get("transcript_path")
+    raw = safely(read_stdin, "")
+    data = safely(lambda: json.loads(raw), {}) or {}
+    cwd = data.get("cwd")       # no os.getcwd() - see find_brain()
+    # The docs use both names for this field - take whichever is present.
+    trigger = data.get("compaction_trigger") or data.get("trigger") or "unknown"
+    transcript = data.get("transcript_path")
 
-    kat = znajdz_brain(cwd)
-    if not kat:
-        # Brak BRAIN/ to nie blad — nie kazdy projekt go ma.
-        print("PreCompact: brak katalogu BRAIN/checkpoints, pomijam.")
+    directory = find_brain(cwd)
+    if not directory:
+        # No BRAIN/ is not an error - not every project has one.
+        print("PreCompact: no BRAIN/checkpoints directory, skipping.")
         return 0
 
-    polecenia, pliki, komendy, agenci, powod = bezpiecznie(
-        lambda: czytaj_transkrypt(transkrypt), ([], [], [], [], "blad czytania transkryptu"))
+    requests, files, commands, agents, reason = safely(
+        lambda: read_transcript(transcript),
+        ([], [], [], [], "failed to read the transcript"))
 
-    projekt = os.path.dirname(os.path.dirname(kat))
-    head = bezpiecznie(lambda: git(projekt, "log", "--oneline", "-1"), "")
-    galaz = bezpiecznie(lambda: git(projekt, "branch", "--show-current"), "")
-    brudne = bezpiecznie(lambda: git(projekt, "status", "--short"), "")
-    od_commita = bezpiecznie(
-        lambda: git(projekt, "log", "--oneline", "--since=12.hours"), "")
+    project = os.path.dirname(os.path.dirname(directory))
+    head = safely(lambda: git(project, "log", "--oneline", "-1"), "")
+    branch = safely(lambda: git(project, "branch", "--show-current"), "")
+    dirty = safely(lambda: git(project, "status", "--short"), "")
+    recent = safely(lambda: git(project, "log", "--oneline", "--since=12.hours"), "")
 
-    teraz = datetime.now()
-    # ⚠️ NIGDY NIE NADPISUJ ISTNIEJACEGO CHECKPOINTU. Nazwa z dokladnoscia do minuty
-    # gubila drugie kompaktowanie w tej samej minucie; sekundy zwezily okno, ale go nie
-    # zamknely — dwa wywolania pod rzad mieszcza sie w jednej sekundzie. Nadpisany
-    # checkpoint wyglada dokladnie tak samo jak zapisany, wiec strata jest niewidoczna.
-    # Licznik zamyka to na dobre. Zlapane testem, przypadek C.
-    # Licznik idzie PRZED koncowka, nie po niej: i ten skrypt, i hook SessionStart
-    # rozpoznaja szkielety po koncowce "-przed-kompaktem.md". Nazwa z licznikiem na
-    # koncu wypadala z obu filtrow, czyli plik powstawal i byl niewidoczny.
-    stempel = teraz.strftime("%Y-%m-%d-%H%M%S")
-    sciezka = os.path.join(kat, stempel + "-przed-kompaktem.md")
+    now = datetime.now()
+    # WARNING: NEVER OVERWRITE AN EXISTING CHECKPOINT. A minute-resolution name lost
+    # the second compaction within the same minute; seconds narrowed the window but
+    # did not close it - two calls in a row fit inside one second. An overwritten
+    # checkpoint looks exactly like a written one, so the loss is invisible. The
+    # counter closes it for good. Caught by test case C.
+    #
+    # The counter goes BEFORE the suffix, not after it: this script and the
+    # SessionStart hook both recognise skeletons by the suffix. With the counter at
+    # the end, the file fell out of both filters - written, and invisible.
+    stamp = now.strftime("%Y-%m-%d-%H%M%S")
+    path = os.path.join(directory, stamp + SUFFIX)
     n = 2
-    while os.path.exists(sciezka):
-        sciezka = os.path.join(kat, "%s-%d-przed-kompaktem.md" % (stempel, n))
+    while os.path.exists(path):
+        path = os.path.join(directory, "%s-%d%s" % (stamp, n, SUFFIX))
         n += 1
 
-    czesci = []
-    czesci.append("---\ntype: checkpoint\nstatus: szkielet\ndate: %s\n"
-                  "tags: [checkpoint, przed-kompaktem, automat]\n---\n"
-                  % teraz.strftime("%Y-%m-%d"))
-    czesci.append("# Checkpoint przed kompaktowaniem — %s\n"
-                  % teraz.strftime("%Y-%m-%d %H:%M"))
-    czesci.append("> Warstwa deterministyczna zapisana automatycznie przez hook "
-                  "`PreCompact` (wyzwalacz: **%s**). Sekcje oznaczone **DO UZUPELNIENIA** "
-                  "wymagaja sadu i wypelnia je model albo czlowiek; jesli zostaly puste, "
-                  "znaczy to, ze kompaktowanie zdazylo pierwsze.\n" % wyzwalacz)
+    out = []
+    out.append("---\ntype: checkpoint\nstatus: skeleton\ndate: %s\n"
+               "tags: [checkpoint, before-compaction, automatic]\n---\n"
+               % now.strftime("%Y-%m-%d"))
+    out.append("# Checkpoint before compaction - %s\n" % now.strftime("%Y-%m-%d %H:%M"))
+    out.append("> Deterministic layer written automatically by the `PreCompact` hook "
+               "(trigger: **%s**). Sections marked **%s** need judgement and are "
+               "filled in by the model or a human; if they are still empty, "
+               "compaction got there first.\n" % (trigger, MARKER))
 
-    if powod:
-        czesci.append("\n> **UWAGA — warstwa deterministyczna jest NIEPELNA.** %s\n"
-                      "> Puste sekcje ponizej NIE znacza, ze nic sie nie dzialo.\n" % powod)
+    if reason:
+        out.append("\n> **WARNING - the deterministic layer is INCOMPLETE.** %s\n"
+                   "> Empty sections below do NOT mean nothing happened.\n" % reason)
 
-    czesci.append("\n## Stan repozytorium\n")
-    czesci.append("- galaz: `%s`\n- ostatni commit: `%s`\n" % (galaz or "?", head or "?"))
-    if od_commita:
-        czesci.append("- commity z ostatnich 12 h:\n")
-        for l in od_commita.splitlines():
-            czesci.append("  - `%s`\n" % l)
-    czesci.append("- niezacommitowane: %s\n"
-                  % ("brak" if not brudne else "\n" + "\n".join(
-                      "  - `%s`" % l for l in brudne.splitlines()[:MAKS_PLIKOW]) + "\n"))
+    out.append("\n## Repository state\n")
+    out.append("- branch: `%s`\n- last commit: `%s`\n" % (branch or "?", head or "?"))
+    if recent:
+        out.append("- commits in the last 12 h:\n")
+        for line in recent.splitlines():
+            out.append("  - `%s`\n" % line)
+    out.append("- uncommitted: %s\n"
+               % ("none" if not dirty else "\n" + "\n".join(
+                   "  - `%s`" % l for l in dirty.splitlines()[:MAX_FILES]) + "\n"))
 
-    if polecenia:
-        czesci.append("\n## O co prosil uzytkownik (dosłownie, ostatnie %d)\n\n"
-                      % min(len(polecenia), MAKS_POLECEN))
-        for t in polecenia[-MAKS_POLECEN:]:
-            czesci.append("- %s\n" % t)
+    if requests:
+        out.append("\n## What the user asked for (verbatim, last %d)\n\n"
+                   % min(len(requests), MAX_REQUESTS))
+        for text in requests[-MAX_REQUESTS:]:
+            out.append("- %s\n" % text)
 
-    if pliki:
-        czesci.append("\n## Pliki tworzone i zmieniane w sesji\n\n")
-        for p in pliki[:MAKS_PLIKOW]:
-            czesci.append("- `%s`\n" % p)
-        if len(pliki) > MAKS_PLIKOW:
-            czesci.append("- ... oraz %d dalszych\n" % (len(pliki) - MAKS_PLIKOW))
+    if files:
+        out.append("\n## Files created and changed in this session\n\n")
+        for p in files[:MAX_FILES]:
+            out.append("- `%s`\n" % p)
+        if len(files) > MAX_FILES:
+            out.append("- ... and %d more\n" % (len(files) - MAX_FILES))
 
-    if agenci:
-        czesci.append("\n## Uruchomieni agenci\n\n")
-        for a in agenci:
-            czesci.append("- %s\n" % a)
+    if agents:
+        out.append("\n## Agents launched\n\n")
+        for a in agents:
+            out.append("- %s\n" % a)
 
-    if komendy:
-        czesci.append("\n## Co uruchomiono (ostatnie 25)\n\n")
-        for k in komendy[-25:]:
-            czesci.append("- %s\n" % k)
+    if commands:
+        out.append("\n## What was run (last 25)\n\n")
+        for c in commands[-25:]:
+            out.append("- %s\n" % c)
 
-    czesci.append("\n---\n\n## DO UZUPELNIENIA — ustalenia\n\n"
-                  "_Co zostalo rozstrzygniete i na jakiej podstawie. Liczby, nie proza._\n\n")
-    czesci.append("## DO UZUPELNIENIA — otwarte\n\n"
-                  "_Co zostalo niedokonczone i co jest nastepnym krokiem._\n\n")
-    czesci.append("## DO UZUPELNIENIA — czego nie wolno cofnac\n\n"
-                  "_Decyzje i pomiary, ktore nastepna sesja moglaby niechcacy odwrocic._\n\n")
-    czesci.append("## Zrodlo\n\nTranskrypt sesji: `%s`\n" % (transkrypt or "nieznany"))
+    out.append("\n---\n\n## %s - what was settled\n\n"
+               "_What was decided and on what evidence. Numbers, not prose._\n\n" % MARKER)
+    out.append("## %s - still open\n\n"
+               "_What was left unfinished, and what the next step is._\n\n" % MARKER)
+    out.append("## %s - what must not be undone\n\n"
+               "_Decisions and measurements the next session could reverse by "
+               "accident._\n\n" % MARKER)
+    out.append("## Source\n\nSession transcript: `%s`\n" % (transcript or "unknown"))
 
-    with io.open(sciezka, "w", encoding="utf-8", newline="\n") as f:
-        f.write("".join(czesci))
+    with io.open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("".join(out))
 
-    # Ten wydruk trafia do logu, NIE do modelu (patrz naglowek). Jest po to, zeby
-    # dalo sie sprawdzic, ze hook w ogole sie wykonal — nie po to, zeby cos zlecic.
-    print("PreCompact: zapisano szkielet checkpointu %s (wyzwalacz %s, %d plikow, "
-          "%d polecen uzytkownika)%s"
-          % (sciezka, wyzwalacz, len(pliki), len(polecenia),
-             ("  UWAGA: " + powod) if powod else ""))
+    # This print goes to the log, NOT to the model (see the module docstring). It is
+    # here so you can check the hook ran at all - not to ask for anything.
+    print("PreCompact: wrote checkpoint skeleton %s (trigger %s, %d files, "
+          "%d user requests)%s"
+          % (path, trigger, len(files), len(requests),
+             ("  WARNING: " + reason) if reason else ""))
     print(json.dumps({"continue": True}))
     return 0
 
 
 try:
     sys.exit(main())
-except Exception as e:                      # hook NIGDY nie psuje sesji
+except Exception as e:                      # a hook NEVER breaks the session
     sys.stderr.write("PreCompact checkpoint: %s\n" % e)
     sys.exit(0)

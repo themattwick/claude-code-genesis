@@ -1,33 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Czy hooki kompaktowania robia to, co maja robic. Sprawdza SKUTEK, nie uruchomienie.
+"""Do the compaction hooks do their job? Checks the EFFECT, not that they ran.
 
-Uruchom po kazdej zmianie sciezek, przeniesieniu katalogu albo edycji ustawien:
+Run it after any path change, directory move, or settings edit:
 
     python test_hooks.py
 
-Bierze polecenia z `~/.claude/settings.json`, czyli sprawdza to, co naprawde sie
-odpali — nie sciezke wpisana tutaj. Gdy hookow tam nie ma, mowi to wprost i konczy
-kodem 1, zamiast udawac, ze przeszlo.
+It takes the commands from `~/.claude/settings.json`, so it exercises what will
+actually fire - not a path hard-coded here. If the hooks are not registered there, it
+says so plainly and exits 1 instead of pretending to pass.
 
-⚠️ DLACZEGO NIE WYSTARCZY "SKRYPT SIE URUCHOMIL". Oba hooki z zalozenia koncza sie
-kodem 0 zawsze — hook, ktory psuje sesje, zostaje wylaczony po pierwszym razie.
-Kod wyjscia nie niesie wiec zadnej informacji o powodzeniu. Ten test patrzy, czy
-plik powstal, GDZIE powstal i co jest w srodku.
+WARNING: WHY "THE SCRIPT RAN" PROVES NOTHING. Both hooks always exit 0 by design - a
+hook that breaks a session gets switched off after the first time. The exit code
+therefore carries no information about success. This test looks at whether a file
+appeared, WHERE it appeared, and what is inside it.
 
-Zlapal tak dwie usterki, ktorych uruchomienie hooka nie pokazywalo (2026-09-13):
-  - szukanie projektu przez os.getcwd(): sesja jednego projektu zapisywala
-    checkpoint do BRAIN zupelnie innego repozytorium
-  - nazwa pliku z dokladnoscia do minuty: dwa kompaktowania w tej samej minucie
-    nadpisywaly sie po cichu, a nadpisany plik wyglada jak zapisany
+That caught three bugs a bare run did not show:
+  - project lookup via os.getcwd(): a session in one project wrote its checkpoint
+    into a completely different repository's BRAIN
+  - minute-resolution filenames: two compactions inside the same minute overwrote
+    each other silently, and an overwritten file looks exactly like a written one
+  - sys.stdin.read() decoding with the system code page: a transcript path holding a
+    non-ASCII character "did not exist", and the checkpoint came out EMPTY while the
+    hook reported success
 
-TRZY PRZYPADKI, bo dopiero razem cos dowodza:
-  A. projekt Z katalogiem BRAIN/checkpoints -> checkpoint MA powstac wlasnie tam
-  B. projekt BEZ katalogu BRAIN            -> NIC nie ma powstac, hook ma milczec
-  C. dwa wywolania pod rzad                -> DWA pliki, nie jeden nadpisany
+FOUR CASES, because only together do they prove anything:
+  A. project WITH BRAIN/checkpoints  -> the checkpoint must appear exactly there
+  B. project WITHOUT BRAIN/          -> NOTHING may appear, the hook must stay silent
+  C. two calls in a row              -> TWO files, not one overwritten
+  D. transcript path with non-ASCII  -> it must still be read
 
-Przypadek B jest najwazniejszy: hooki wisza globalnie, wiec odpalaja sie w kazdym
-projekcie na tej maszynie.
+Case B matters most: the hooks are registered globally, so they fire in every project
+on the machine.
 """
 import io
 import json
@@ -37,112 +41,157 @@ import subprocess
 import sys
 import tempfile
 
-USTAWIENIA = os.path.join(os.path.expanduser("~"), ".claude", "settings.json")
+SETTINGS = os.path.join(os.path.expanduser("~"), ".claude", "settings.json")
 
-# Transkrypt budujemy sami, zamiast siegac po prawdziwa sesje. Dzieki temu wiadomo,
-# czego szukac w checkpoincie — test sprawdza TRESC, nie sam fakt zapisu.
-POLECENIE = "zolwica kontryfikuje pasmanteryjny wrzeciennik"
-PLIK_W_SESJI = "C:/nieistniejacy/przyklad.py"
+SUFFIX = "-before-compaction.md"
+MARKER = "TO BE FILLED IN"
+
+# We build the transcript ourselves rather than reaching for a real session. That way
+# we know what to look for in the checkpoint - the test checks CONTENT, not the mere
+# fact that a file was written. The request is deliberate nonsense so it cannot
+# appear by accident.
+REQUEST = "the marmalade turbine kontrifies a passementerie spindle"
+FILE_IN_SESSION = "C:/does-not-exist/example.py"
+
+# A directory name with characters outside ASCII, matching a real session path on a
+# machine whose user name is not spelled in ASCII. Case D exists only for this.
+NON_ASCII_DIR = "s\u0107ie\u017cka-M\u00fcller-Wi\u0119cek"
 
 
-def polecenie_hooka(ev):
-    if not os.path.isfile(USTAWIENIA):
+def hook_command(event):
+    if not os.path.isfile(SETTINGS):
         return None
-    d = json.load(io.open(USTAWIENIA, encoding="utf-8"))
+    data = json.load(io.open(SETTINGS, encoding="utf-8"))
     try:
-        return d["hooks"][ev][0]["hooks"][0]["command"]
+        return data["hooks"][event][0]["hooks"][0]["command"]
     except (KeyError, IndexError, TypeError):
         return None
 
 
-def zbuduj_transkrypt(sciezka):
-    wiersze = [
-        {"type": "user", "message": {"content": POLECENIE}},
+def build_transcript(path):
+    rows = [
+        {"type": "user", "message": {"content": REQUEST}},
         {"type": "assistant", "message": {"content": [
-            {"type": "tool_use", "name": "Write", "input": {"file_path": PLIK_W_SESJI}}]}},
+            {"type": "tool_use", "name": "Write", "input": {"file_path": FILE_IN_SESSION}}]}},
         {"type": "assistant", "message": {"content": [
             {"type": "tool_use", "name": "Bash",
-             "input": {"description": "policz pliki", "command": "ls"}}]}},
+             "input": {"description": "count the files", "command": "ls"}}]}},
     ]
-    with io.open(sciezka, "w", encoding="utf-8", newline="\n") as f:
-        for w in wiersze:
-            f.write(json.dumps(w, ensure_ascii=False) + "\n")
+    with io.open(path, "w", encoding="utf-8", newline="\n") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
-def odpal(ev, cwd, transkrypt):
-    we = json.dumps({"cwd": cwd, "transcript_path": transkrypt,
-                     "compaction_trigger": "auto", "source": "compact"})
-    p = subprocess.run(polecenie_hooka(ev), shell=True, input=we, capture_output=True,
-                       text=True, encoding="utf-8", errors="replace")
-    return p.returncode, p.stdout, p.stderr
+def run(event, cwd, transcript):
+    # ensure_ascii=False and input as BYTES - this is what Claude Code does. With the
+    # default ensure_ascii=True, "\u0119" is pure ASCII, so every decoder reads it
+    # correctly and the test passes even against a broken hook. Verified: with text
+    # here instead of bytes, case D still reported OK after the bug was reinstated.
+    payload = json.dumps({"cwd": cwd, "transcript_path": transcript,
+                          "compaction_trigger": "auto", "source": "compact"},
+                         ensure_ascii=False).encode("utf-8")
+    p = subprocess.run(hook_command(event), shell=True, input=payload,
+                       capture_output=True)
+    return (p.returncode,
+            p.stdout.decode("utf-8", "replace"),
+            p.stderr.decode("utf-8", "replace"))
 
 
-def szkielety(projekt):
-    k = os.path.join(projekt, "BRAIN", "checkpoints")
-    if not os.path.isdir(k):
+def skeletons(project):
+    directory = os.path.join(project, "BRAIN", "checkpoints")
+    if not os.path.isdir(directory):
         return []
-    return sorted(f for f in os.listdir(k) if f.endswith("-przed-kompaktem.md"))
+    return [f for f in os.listdir(directory) if f.endswith(SUFFIX)]
 
 
-def wynik(stan, nazwa, opis):
-    print("%-4s %-54s %s" % ("OK" if stan else "BLAD", nazwa, opis))
-    return stan
+def result(state, name, detail):
+    print("%-4s %-55s %s" % ("OK" if state else "FAIL", name, detail))
+    return bool(state)
+
+
+def read_only_skeleton(project):
+    names = skeletons(project)
+    if not names:
+        return ""
+    return io.open(os.path.join(project, "BRAIN", "checkpoints", names[0]),
+                   encoding="utf-8").read()
 
 
 def main():
-    for ev in ("PreCompact", "SessionStart"):
-        if not polecenie_hooka(ev):
-            print("BLAD hook %s nie jest zarejestrowany w %s" % (ev, USTAWIENIA))
-            print("\nNIE PRZESZLO — nie ma czego testowac.")
+    for event in ("PreCompact", "SessionStart"):
+        if not hook_command(event):
+            print("FAIL hook %s is not registered in %s" % (event, SETTINGS))
+            print("\nDID NOT PASS - there is nothing to test.")
             return 1
 
     ok = True
-    tmp = tempfile.mkdtemp(prefix="test-hookow-")
+    tmp = tempfile.mkdtemp(prefix="test-hooks-")
     try:
-        transkrypt = os.path.join(tmp, "sesja.jsonl")
-        zbuduj_transkrypt(transkrypt)
+        transcript = os.path.join(tmp, "session.jsonl")
+        build_transcript(transcript)
 
-        # A. projekt Z katalogiem BRAIN
-        a = os.path.join(tmp, "z-brainem")
+        # A. project WITH a BRAIN directory
+        a = os.path.join(tmp, "with-brain")
         os.makedirs(os.path.join(a, "BRAIN", "checkpoints"))
-        kod, out, err = odpal("PreCompact", a, transkrypt)
-        ok &= wynik(kod == 0, "A. projekt z BRAIN/ — nie przerywa sesji", "kod %d" % kod)
-        pliki = szkielety(a)
-        ok &= wynik(len(pliki) == 1, "A. checkpoint powstal W TYM projekcie",
-                    ", ".join(pliki) or "brak pliku")
-        tresc = ""
-        if pliki:
-            tresc = io.open(os.path.join(a, "BRAIN", "checkpoints", pliki[0]),
-                            encoding="utf-8").read()
-        ok &= wynik(POLECENIE in tresc, "A. checkpoint niesie DOSLOWNE polecenie uzytkownika",
-                    "szukane: %r" % POLECENIE[:34])
-        ok &= wynik(PLIK_W_SESJI in tresc, "A. checkpoint niesie plik dotkniety w sesji",
-                    PLIK_W_SESJI)
-        ok &= wynik("DO UZUPELNIENIA" in tresc, "A. checkpoint ma sekcje dla modelu",
-                    "%d znakow" % len(tresc))
-        kod, out, err = odpal("SessionStart", a, transkrypt)
-        ok &= wynik(kod == 0 and "brain-ops" in out,
-                    "A. SessionStart kaze wywolac skill brain-ops", "kod %d" % kod)
+        code, out, err = run("PreCompact", a, transcript)
+        ok &= result(code == 0, "A. project with BRAIN/ - does not break the session",
+                     "exit %d" % code)
+        names = skeletons(a)
+        ok &= result(len(names) == 1, "A. checkpoint appeared IN THIS project",
+                     ", ".join(names) or "no file")
+        text = read_only_skeleton(a)
+        ok &= result(REQUEST in text, "A. checkpoint carries the VERBATIM user request",
+                     "looked for: %r" % REQUEST[:34])
+        ok &= result(FILE_IN_SESSION in text, "A. checkpoint carries a file touched in "
+                     "the session", FILE_IN_SESSION)
+        ok &= result(MARKER in text, "A. checkpoint has the sections for the model",
+                     "%d chars" % len(text))
+        code, out, err = run("SessionStart", a, transcript)
+        ok &= result(code == 0 and "brain-ops" in out,
+                     "A. SessionStart asks for the brain-ops skill", "exit %d" % code)
 
-        # B. projekt BEZ katalogu BRAIN
-        b = os.path.join(tmp, "bez-braina")
+        # B. project WITHOUT a BRAIN directory
+        b = os.path.join(tmp, "without-brain")
         os.makedirs(os.path.join(b, "src"))
-        kod, out, err = odpal("PreCompact", b, transkrypt)
-        ok &= wynik(kod == 0, "B. projekt bez BRAIN/ — nie przerywa sesji", "kod %d" % kod)
-        ok &= wynik(os.listdir(b) == ["src"] and not os.listdir(os.path.join(b, "src")),
-                    "B. projekt bez BRAIN/ — nic nie zapisal", str(os.listdir(b)))
-        kod, out, err = odpal("SessionStart", b, transkrypt)
-        ok &= wynik(kod == 0 and out.strip() == "", "B. SessionStart milczy",
-                    "%d znakow na wyjsciu" % len(out))
+        code, out, err = run("PreCompact", b, transcript)
+        ok &= result(code == 0, "B. project without BRAIN/ - does not break the session",
+                     "exit %d" % code)
+        ok &= result(os.listdir(b) == ["src"] and not os.listdir(os.path.join(b, "src")),
+                     "B. project without BRAIN/ - wrote nothing", str(os.listdir(b)))
+        code, out, err = run("SessionStart", b, transcript)
+        ok &= result(code == 0 and out.strip() == "", "B. SessionStart stays silent",
+                     "%d chars of output" % len(out))
 
-        # C. dwa wywolania pod rzad
-        odpal("PreCompact", a, transkrypt)
-        ok &= wynik(len(szkielety(a)) == 2, "C. drugie kompaktowanie NIE nadpisuje pierwszego",
-                    "plikow: %d" % len(szkielety(a)))
+        # D. transcript path holding characters outside ASCII.
+        #
+        # Cases A-C used an ASCII path and therefore DID NOT SEE that sys.stdin.read()
+        # decodes the incoming JSON with the system code page: the path fell apart,
+        # the file "did not exist", and the checkpoint came out EMPTY at exit code 0.
+        # Only a real compaction exposed it. This case keeps it from coming back.
+        d_dir = os.path.join(tmp, NON_ASCII_DIR)
+        os.makedirs(d_dir)
+        d_transcript = os.path.join(d_dir, "session.jsonl")
+        build_transcript(d_transcript)
+        d = os.path.join(tmp, "non-ascii-path")
+        os.makedirs(os.path.join(d, "BRAIN", "checkpoints"))
+        code, out, err = run("PreCompact", d, d_transcript)
+        text = read_only_skeleton(d)
+        ok &= result(REQUEST in text,
+                     "D. transcript under a non-ASCII path WAS READ",
+                     out.strip()[:110] or "no output")
+        ok &= result("INCOMPLETE" not in text,
+                     "D. no incomplete-deterministic-layer warning",
+                     "%d chars" % len(text))
+
+        # C. two calls in a row
+        run("PreCompact", a, transcript)
+        ok &= result(len(skeletons(a)) == 2,
+                     "C. a second compaction does NOT overwrite the first",
+                     "files: %d" % len(skeletons(a)))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
-    print("\n%s" % ("WSZYSTKO PRZESZLO" if ok else "COS PADLO — patrz wyzej"))
+    print("\n%s" % ("EVERYTHING PASSED" if ok else "SOMETHING FAILED - see above"))
     return 0 if ok else 1
 
 

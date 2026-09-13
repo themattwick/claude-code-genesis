@@ -80,7 +80,7 @@ if ($SkipHooks) { Write-Host "`nHooks left alone (-SkipHooks)."; return }
 $skrypty = Join-Path $zrodlo 'brain-ops\scripts'
 $hooki = @{
     PreCompact   = @{ plik = 'precompact_checkpoint.py'; matcher = 'manual|auto'; timeout = 20 }
-    SessionStart = @{ plik = 'sessionstart_dokoncz_checkpoint.py'; matcher = 'compact'; timeout = 10 }
+    SessionStart = @{ plik = 'sessionstart_finish_checkpoint.py'; matcher = 'compact'; timeout = 10 }
 }
 
 if (Test-Path $ustawienia) {
