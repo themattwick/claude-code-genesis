@@ -15,6 +15,23 @@ from pathlib import Path
 ENTRY_DIRS = ["handoffs", "checkpoints", "sessions", "decisions", "bugs",
               "learnings", "patterns", "glossary", "reference", "specs"]
 SKIP_FILES = {"INDEX.md", "README.md", "QUICK-REFERENCE.md"}
+
+# A directory holding this file contains MATERIAL, not entries: sample output,
+# a prototype, imported documents, anything that lives in BRAIN/ as evidence
+# attached to an entry rather than as an entry itself. It and everything below
+# it is skipped by every tool that reads the knowledge base.
+#
+# Why a marker file and not a name pattern or a type allowlist: a pattern like
+# "prototyp*" silently stops working the day someone names a directory
+# differently, and skipping unknown TYPES would also silence the case this
+# check exists for — a real entry with a typo in its type. A marker is visible
+# when you open the directory and says what it means.
+#
+# Measured on a real base: without it, 47 prototype files written in a
+# different format (OKF concepts and rules, `type: Business Rule`) produced 50
+# MEDIUM hygiene findings, every one a false positive. A control that reports
+# noise stops being read.
+NOT_ENTRIES_MARKER = ".not-brain-entries"
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
 VALID_TYPES = {"checkpoint", "session", "decision", "bug", "learning",
@@ -90,18 +107,34 @@ def humanize(filename: str) -> str:
     return stem.replace("-", " ")
 
 
-def read_entry(path: Path, folder: str) -> dict:
-    """Build a normalized entry record, applying fallbacks for missing fields."""
+def read_entry(path: Path, folder: str, brain_root: Path) -> dict:
+    """Build a normalized entry record, applying fallbacks for missing fields.
+
+    `path` in the record is relative to BRAIN/ and POSIX-separated, so it is
+    usable as a link target and as a stable identity key on every platform.
+    For an entry sitting directly in a known folder this is exactly the old
+    "<folder>/<name>" — the change is only visible for nested entries.
+
+    `group` is the sub-path between the folder and the file ("" at the top
+    level). It lets a caller keep a nested collection together instead of
+    letting its members flood the flat table for their type.
+    """
     text = path.read_text(encoding="utf-8", errors="replace")
     meta = parse_frontmatter(text)
     date_match = DATE_RE.search(path.name)
+    rel = path.relative_to(brain_root)
+    # relative_to() yields "." for a file sitting directly in the folder. Compare
+    # against it exactly — stripping dots would also mangle a real directory name
+    # that happens to contain one.
+    sub = rel.parent.relative_to(folder).as_posix()
     return {
         "type": meta.get("type", folder.rstrip("s")),
         "status": meta.get("status", "active"),
         "date": meta.get("date") or (date_match.group(1) if date_match else "—"),
         "tags": meta.get("tags", []),
         "title": extract_title(text, humanize(path.name)),
-        "path": f"{folder}/{path.name}",
+        "path": rel.as_posix(),
+        "group": "" if sub == "." else sub,
         "has_frontmatter": bool(meta),
         "meta": meta,
         "file": path,
@@ -109,17 +142,42 @@ def read_entry(path: Path, folder: str) -> dict:
 
 
 def collect_entries(brain_root: Path) -> list[dict]:
-    """Read every entry under the known BRAIN/ subfolders."""
+    """Read every entry under the known BRAIN/ subfolders, at any depth.
+
+    ⚠️ It recurses, and that is the point. The first version globbed one level
+    deep, so a folder holding a nested collection — a wayfinder map with its
+    tickets, a spec with its research notes — was indexed as ZERO entries and
+    nothing said so. Measured on a real base: 80 files under specs/, 10 in the
+    index, 70 invisible, and the gap had been there since the first run. An
+    index that silently omits most of a folder is worse than no index, because
+    it looks complete.
+    """
     entries = []
     for folder in ENTRY_DIRS:
         d = brain_root / folder
         if not d.exists():
             continue
-        for path in sorted(d.glob("*.md")):
-            if path.name in SKIP_FILES:
+        for path in sorted(d.rglob("*.md")):
+            if path.name in SKIP_FILES or is_material(path, d):
                 continue
-            entries.append(read_entry(path, folder))
+            entries.append(read_entry(path, folder, brain_root))
     return entries
+
+
+def is_material(path: Path, folder_root: Path) -> bool:
+    """True when the file sits in (or under) a directory marked as material.
+
+    The marker applies to everything below it, not only to its own directory —
+    a prototype bundle has its own subfolders and marking each one separately
+    is a rule nobody would keep.
+    """
+    d = path.parent
+    while True:
+        if (d / NOT_ENTRIES_MARKER).exists():
+            return True
+        if d == folder_root or d.parent == d:
+            return False
+        d = d.parent
 
 
 def as_list(value) -> list[str]:
