@@ -36,6 +36,9 @@ Act at these points without waiting to be asked:
 | An external fact worth remembering (repo location, API/vendor note) | `reference/` entry | write |
 | A spec/worksheet exists but isn't a settled decision yet | `specs/` entry | write |
 | A task or phase just completed | checkpoint | write |
+| Work changes phase: research → plan, plan → implementation | checkpoint | write |
+| An approach just failed and you are switching to another | checkpoint (what was tried, why it failed) | write |
+| About to switch to an unrelated topic | checkpoint | write |
 | About to do something risky (migration, large refactor, reset) | checkpoint first | write |
 | Context is filling up / before compaction | checkpoint | write — **hook-driven**, see Scripts |
 | End of session, or handing to another model | handoff | write |
@@ -75,8 +78,16 @@ Trigger: `brain checkpoint [description]`, or a capture trigger above.
    — it writes a timestamped file with frontmatter and the section skeleton.
 2. Fill the sections with concrete facts: file paths with line numbers, test counts,
    measured numbers. Not prose.
-3. Keep it to a few minutes of writing. This is continuity, not a report.
-4. Regenerate the index (see below).
+3. **Two fields are mandatory: `Left off` and `Next steps`.** `Left off` names one concrete
+   place (file, function or error); `Next steps` is an ordered list. A checkpoint with only
+   a title is worse than none — it looks like continuity and carries none. Also fill
+   `Summary` (at most 10 words), `Decisions` (what + why) and `Blockers` (or "none").
+4. Keep it to a few minutes of writing. This is continuity, not a report.
+5. Regenerate the index (see below).
+
+Phase changes and failed attempts are natural checkpoint moments (see the triggers
+table) and natural moments to `/compact`. This complements the compaction hooks below;
+it does not replace them.
 
 Output: the path written, in one line. Shape reference: `templates/checkpoint-template.md`.
 
@@ -86,7 +97,11 @@ Trigger: `brain handoff`, end of session, or switching models.
 
 1. Start from `BRAIN/INDEX.md` for current state (regenerate it first if stale).
 2. Read the most recent checkpoints plus any decisions and bugs touched this session.
-3. Fill `templates/handoff-template.md`.
+3. Fill `templates/handoff-template.md`. Sort every claim into **Verified** (with
+   evidence: a command and its result, a test count, `file:line`) or **Intended /
+   unverified**. If you did not run it or read it this session, it is the second kind,
+   however sure you feel — the receiving model must not take a plan for a fact. Add
+   source, time of observation and open questions.
 4. Save as `BRAIN/handoffs/YYYY-MM-DD-<from>-to-<to>.md` with frontmatter
    (`type: handoff`, `status: active`, `date`, `tags`).
 5. Regenerate the index.
@@ -104,10 +119,18 @@ This is the step that keeps `BRAIN/` from drowning: it turns raw material into
 durable knowledge **and retires the source**. Both halves are required.
 
 1. Select sources: active checkpoints and sessions older than ~14 days, or
-   everything since the last consolidation.
+   everything since the last consolidation. **Then, for each candidate entry, search
+   `learnings/`, `patterns/` and `bugs/` for an active entry with the same root cause**
+   (grep the title words and tags). Same cause, different symptom → add a line to
+   *Examples* of the existing entry instead of writing a new one. List what you found
+   before synthesizing; if you found nothing, say that you looked.
 2. Synthesize into durable entries under `decisions/`, `bugs/`, `learnings/` or
    `patterns/`. Give each frontmatter with `tags` and `links:` back to its sources.
-   For bug write-ups use `templates/entries/bug-hard-case.md`.
+   For learnings and patterns use `templates/entries/learning-pattern.md`: 4–8
+   sentences, a title that names the pattern rather than the event, and the three
+   required parts — root cause, a portable rule ("Next time [situation], I will
+   [action]"), and a recognition signal. For bug write-ups use
+   `templates/entries/bug-hard-case.md`.
 3. **Retire the sources**: set `status: archived` on every checkpoint you consolidated.
    Never delete — history stays, it just leaves the active set.
 4. If a new entry replaces an existing durable one, set `supersedes: <old-file>` on
@@ -173,6 +196,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `templates/checkpoint-template.md` | Shape of a checkpoint |
 | `templates/handoff-template.md` | Cross-model handoff document |
 | `templates/entries/bug-hard-case.md` | Hard bug write-ups during consolidation |
+| `templates/entries/learning-pattern.md` | Learnings and patterns: root cause, rule, recognition signal |
 | `templates/entries/glossary-term.md` | Domain term definitions |
 | `templates/QUICK-REFERENCE.md` | Day-to-day cheat sheet |
 
@@ -285,6 +309,9 @@ of the skill, in this git working tree, available in every project, updated ever
 ⚠️ **The hooks hold absolute paths into this clone.** Move or rename the clone and they
 break — while still firing and still exiting 0, so nothing appears to fail. Re-run the
 installer after any move, then `test_hooks.py`.
+
+Checkpoint, handoff and learning/pattern templates adapt ideas from the ECC library
+(affaan-m/ECC, MIT) — see each template's header comment.
 
 Entries carry a small optional frontmatter block (`type`, `status`, `tags`,
 `links`, `supersedes`) — see `docs/FRONTMATTER.md`. Every tool degrades gracefully

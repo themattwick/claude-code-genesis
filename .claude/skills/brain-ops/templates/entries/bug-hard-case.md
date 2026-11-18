@@ -22,6 +22,13 @@ tags: []
 ## Root Cause Analysis
 [Why it happens — point to specific functions, missing cases, grammar limitations, etc.]
 
+## Rule
+Next time [situation], I will [action]. *(If a learning/pattern entry already covers this root
+cause, link it under Related artifacts and add this bug as an example there instead.)*
+
+## Recognition signal
+[How you would notice this class of bug again.]
+
 ## Proposed Fix
 [Concrete suggestion — code sketch, new handling branch, change to visitor logic, etc. Include file + approximate lines if possible]
 
