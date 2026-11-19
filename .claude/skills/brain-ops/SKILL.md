@@ -211,6 +211,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `scripts/sessionstart_finish_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
 | `scripts/test_hooks.py` | **Proof the hooks work.** Exit 1 if anything fails |
 | `scripts/test_index.py` | **Proof the index is complete.** Exit 1 if anything fails |
+| `scripts/test_frontmatter.py` | **Proof `confidence`/`scope`/`projects` work** and old entries are untouched. Exit 1 if anything fails |
 
 ### Nested collections, and material that is not an entry
 
@@ -309,6 +310,10 @@ of the skill, in this git working tree, available in every project, updated ever
 ⚠️ **The hooks hold absolute paths into this clone.** Move or rename the clone and they
 break — while still firing and still exiting 0, so nothing appears to fail. Re-run the
 installer after any move, then `test_hooks.py`.
+
+Learnings and patterns may carry `confidence` (tentative | confirmed), `scope` (project | global)
+and `projects`; confirmed in 2+ projects makes an entry promotable to global — see
+`docs/FRONTMATTER.md`.
 
 Checkpoint, handoff and learning/pattern templates adapt ideas from the ECC library
 (affaan-m/ECC, MIT) — see each template's header comment.

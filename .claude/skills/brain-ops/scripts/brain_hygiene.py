@@ -12,7 +12,9 @@ Checks performed:
   - stale-index             : INDEX.md missing or older than the newest entry
   - stale-checkpoint        : active checkpoint older than --days, never consolidated
   - missing-frontmatter     : entry indexed only by folder + filename fallback
-  - invalid-field           : type/status outside the documented vocabulary
+  - invalid-field           : type/status/confidence/scope outside the documented vocabulary
+  - promotion-due           : confirmed in 2+ projects but still `scope: project`
+  - global-unconfirmed      : `scope: global` without `confidence: confirmed`
 
 Zero external dependencies.
 
@@ -26,7 +28,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from _brain_common import (LINK_FIELDS, VALID_STATUSES, VALID_TYPES, as_list,
+from _brain_common import (LINK_FIELDS, PROMOTE_MIN_PROJECTS, VALID_CONFIDENCE,
+                           VALID_SCOPES, VALID_STATUSES, VALID_TYPES, as_list,
                            collect_entries, find_brain_root)
 
 DEFAULT_STALE_DAYS = 14
@@ -139,6 +142,21 @@ def check_fields(entries: list[dict]) -> list[Finding]:
         if e["status"] not in VALID_STATUSES:
             findings.append(Finding("invalid-field", "MEDIUM", e["path"],
                                     f"unknown status: {e['status']}"))
+        if e["confidence"] and e["confidence"] not in VALID_CONFIDENCE:
+            findings.append(Finding("invalid-field", "MEDIUM", e["path"],
+                                    f"unknown confidence: {e['confidence']}"))
+        if e["stated_scope"] not in VALID_SCOPES:
+            findings.append(Finding("invalid-field", "MEDIUM", e["path"],
+                                    f"unknown scope: {e['stated_scope']}"))
+        if e["promotable"]:
+            findings.append(Finding(
+                "promotion-due", "LOW", e["path"],
+                f"confirmed in {len(e['projects'])} projects "
+                f"(threshold {PROMOTE_MIN_PROJECTS}) - set `scope: global`"))
+        if e["stated_scope"] == "global" and e["confidence"] != "confirmed":
+            findings.append(Finding(
+                "global-unconfirmed", "LOW", e["path"],
+                "scope is global but confidence is not `confirmed`"))
     return findings
 
 

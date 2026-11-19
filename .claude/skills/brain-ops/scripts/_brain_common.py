@@ -38,6 +38,14 @@ VALID_TYPES = {"checkpoint", "session", "decision", "bug", "learning",
                "pattern", "handoff", "glossary", "reference", "spec"}
 VALID_STATUSES = {"active", "superseded", "archived"}
 
+# Trust fields (optional). Adapted from the continuous-learning-v2 skill in ECC
+# (affaan-m/ECC), MIT. `confidence` says how sure we are; `scope` says where the
+# entry applies; `projects` lists where it was actually confirmed.
+VALID_CONFIDENCE = {"tentative", "confirmed"}
+VALID_SCOPES = {"project", "global"}
+# A confirmed entry seen in this many distinct projects is promotable to global.
+PROMOTE_MIN_PROJECTS = 2
+
 LINK_FIELDS = ("links", "supersedes", "superseded_by")
 
 # Section order in the generated index. Reference material (decisions,
@@ -107,6 +115,32 @@ def humanize(filename: str) -> str:
     return stem.replace("-", " ")
 
 
+def trust_fields(meta: dict) -> dict:
+    """Confidence / scope for one entry, with defaults that never break old entries.
+
+    - Missing `confidence` stays "" (shown as "—"). It is NOT defaulted to
+      "tentative": that would stamp every pre-existing entry with a claim nobody
+      made.
+    - Missing `scope` is "project" — the narrow, safe reading.
+    - `promotable`: stated scope is "project", confidence is "confirmed", and the
+      entry lists at least PROMOTE_MIN_PROJECTS distinct `projects`. The effective
+      `scope` is then "global" even before anyone edits the file; hygiene reports it
+      as a to-do so the file catches up.
+    """
+    confidence = str(meta.get("confidence", "")).strip().lower()
+    stated = str(meta.get("scope", "project")).strip().lower() or "project"
+    projects = {p.strip().lower() for p in as_list(meta.get("projects")) if p.strip()}
+    promotable = (stated == "project" and confidence == "confirmed"
+                  and len(projects) >= PROMOTE_MIN_PROJECTS)
+    return {
+        "confidence": confidence,
+        "stated_scope": stated,
+        "scope": "global" if (stated == "global" or promotable) else stated,
+        "projects": sorted(projects),
+        "promotable": promotable,
+    }
+
+
 def read_entry(path: Path, folder: str, brain_root: Path) -> dict:
     """Build a normalized entry record, applying fallbacks for missing fields.
 
@@ -138,6 +172,7 @@ def read_entry(path: Path, folder: str, brain_root: Path) -> dict:
         "has_frontmatter": bool(meta),
         "meta": meta,
         "file": path,
+        **trust_fields(meta),
     }
 
 

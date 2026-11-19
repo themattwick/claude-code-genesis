@@ -3,11 +3,17 @@ type: learning
 status: active
 date: YYYY-MM-DD
 tags: []
+confidence: tentative
+scope: project
+projects: []
 ---
 
 # [Name the PATTERN, not the event — e.g. "Cache keys must include the tenant", not "Tuesday's outage"]
 
 <!-- Set `type: pattern` instead of `learning` once the rule has paid off repeatedly. -->
+<!-- confidence: `tentative` until the rule has held up; then `confirmed`. List each project
+     where it was confirmed under `projects`. Confirmed in 2+ projects → set `scope: global`
+     (`brain hygiene` reports it as "promotion-due"). -->
 <!-- Adapted from the growth-log skill in ECC (affaan-m/ECC), MIT. -->
 
 **Length:** 4–8 sentences in total. If it needs more, it is two entries or a `bugs/` write-up.
