@@ -133,7 +133,7 @@ def check_stale_checkpoints(entries: list[dict], days: int) -> list[Finding]:
         if age > days:
             findings.append(Finding(
                 "stale-checkpoint", "MEDIUM", e["path"],
-                f"{age} days old and still active - consolidate then archive"))
+                f"{age} days old and still active - consolidate then retire"))
     return findings
 
 

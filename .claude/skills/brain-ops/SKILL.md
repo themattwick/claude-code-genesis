@@ -66,7 +66,7 @@ Anti-nag rules, which matter as much as the triggers:
 
 ## Before any operation
 
-`BRAIN/` must exist. If it does not, say so, point to `brain init`, and stop —
+`BRAIN/` must exist. If it does not, say so, point to `/brain-init`, and stop —
 do not create the structure by hand here; that is `brain-init`'s job.
 
 ## Operations
@@ -116,34 +116,11 @@ re-discovering context. Use concrete paths and line numbers, and make the
 
 ### consolidate
 
-Trigger: `brain consolidate` or `brain organize`, or when hygiene reports stale
-checkpoints.
+Trigger: `brain consolidate` or `brain organize`, or when hygiene reports stale checkpoints.
 
-This is the step that keeps `BRAIN/` from drowning: it turns raw material into
-durable knowledge **and retires the source**. Both halves are required.
+Turns raw checkpoints and sessions into durable entries **and retires the sources**. Both halves are required.
 
-1. Select sources: active checkpoints and sessions older than ~14 days, or
-   everything since the last consolidation. **Then, for each candidate entry, search
-   `learnings/`, `patterns/` and `bugs/` for an active entry with the same root cause**
-   (grep the title words and tags). Same cause, different symptom → add a line to
-   *Examples* of the existing entry instead of writing a new one. List what you found
-   before synthesizing; if you found nothing, say that you looked.
-2. Synthesize into durable entries under `decisions/`, `bugs/`, `learnings/` or
-   `patterns/`. Give each frontmatter with `tags` and `links:` back to its sources.
-   For learnings and patterns use `templates/entries/learning-pattern.md`: 4–8
-   sentences, a title that names the pattern rather than the event, and the three
-   required parts — root cause, a portable rule ("Next time [situation], I will
-   [action]"), and a recognition signal. For decisions use
-   `templates/entries/decision.md`, with every real alternative and its cost listed,
-   plus the consequences. For bug write-ups use `templates/entries/bug-hard-case.md`.
-3. **Retire the sources**: set `status: archived` on every checkpoint you consolidated.
-   Never delete — history stays, it just leaves the active set.
-4. If a new entry replaces an existing durable one, set `supersedes: <old-file>` on
-   the new entry and `status: superseded` on the old one.
-5. Regenerate the index.
-6. Verify with `brain hygiene` — it should report no lifecycle inconsistencies.
-
-Output: what was created and what was archived, with counts and paths.
+**Read `reference/consolidate.md` and follow it.** It is not loaded with this file.
 
 ### define
 
@@ -164,44 +141,19 @@ Output: the path written (and, if a redefinition, what changed), in one line.
 
 ### remove
 
-Trigger: something was deliberately taken out, and someone might later put it back.
+Trigger: something was deliberately removed and someone might put it back.
 
-1. Check `BRAIN/removed/` for an existing active entry about the same thing.
-2. Write `BRAIN/removed/YYYY-MM-DD-<slug>.md` from `templates/entries/removal.md`. All four
-   frontmatter fields are required: `removed`, `reason`, `replacement`, `return_if`
-   (`return_if: never` is a valid answer; an empty one is not).
-3. Regenerate the index — the entry then appears under *Deliberately removed — do not
-   restore* at the top of `INDEX.md`.
-4. If the thing is later restored, retire the entry (`status: archived`) and record why in a
-   `decisions/` entry. Never delete it.
+Records something deliberately taken out — why, what replaced it, when it could return — so nobody restores it by accident.
 
-Output: the path written, in one line.
+**Read `reference/remove.md` and follow it.** It is not loaded with this file.
 
 ### hygiene
 
 Trigger: `brain hygiene`, before a handoff, or periodically.
 
-1. Run `python .claude/skills/brain-ops/scripts/brain_hygiene.py <project-root>`
-   (optional `--days N` to change the staleness threshold).
-2. Present the report as-is.
-3. Offer fixes in the order it suggests: HIGH findings first (broken links,
-   lifecycle inconsistencies), then consolidate stale checkpoints, then reindex.
+Runs the deterministic health script and reports its findings as-is.
 
-Do not hand-improvise the checks — the script is their definition, so the same
-knowledge base always yields the same findings.
-
-Content checks, on active entries only (retired ones are history; a hook-written
-`status: skeleton` checkpoint is waiting for the model and is skipped):
-
-- `empty-checkpoint` — nothing under any heading. Only a title.
-- `checkpoint-incomplete` — `Left off` or `Next steps` present but empty.
-- `learning-incomplete` — a learning/pattern without a rule or a recognition signal.
-- `removal-incomplete` — a `removed/` entry missing any of its four fields.
-- `possible-duplicate` — a **heuristic** over titles and tags. It suggests; a real
-  duplicate is the same root cause, and the fix is an example added to the older entry.
-
-Checkpoints written before the mandatory-field schema are judged only on whether they
-say anything at all. With `--strict`, any finding exits 1.
+**Read `reference/hygiene.md` and follow it.** It is not loaded with this file.
 
 ### report
 
@@ -250,103 +202,10 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `scripts/test_validation.py` | **Proof the content checks bite** (empty checkpoints, diary-style learnings, duplicates, `--strict`). Exit 1 if anything fails |
 | `scripts/test_frontmatter.py` | **Proof `confidence`/`scope`/`projects` work** and old entries are untouched. Exit 1 if anything fails |
 
-### Nested collections, and material that is not an entry
+### Internals
 
-Entries are collected **recursively**, so a folder holding a nested collection — a
-wayfinder map with its tickets, a spec with its research notes — is indexed like any
-other. Each collection renders as its own subsection rather than as loose rows, so a
-map with twenty tickets stays readable instead of flooding the table for its type.
-
-⚠️ **The first version globbed one level deep.** A nested collection was indexed as
-**zero** entries and nothing said so. Measured on a real base: 136 files, 64 indexed,
-72 invisible — and the printed count looked plausible, so the gap survived every run
-since the first. An index that silently omits half a folder is worse than no index.
-
-Not everything under `BRAIN/` is an entry, though. Sample output, prototypes and
-imported documents live there as **evidence attached to an entry**. Drop a
-`.not-brain-entries` file in such a directory and every tool skips it, and everything
-below it:
-
-```
-BRAIN/specs/my-map/prototype/WYNIK.md          <- an entry: the conclusion
-BRAIN/specs/my-map/prototype/bundle/           <- material
-BRAIN/specs/my-map/prototype/bundle/.not-brain-entries
-```
-
-**Why a marker and not a name pattern or a type allowlist.** A pattern like
-`prototype*` stops working the day someone names a directory differently, and skipping
-unknown *types* would also silence the case the check exists for — a real entry with a
-typo in its type. A marker is visible when you open the directory and says what it
-means. Measured: 47 prototype files written in a different format produced **50 MEDIUM
-false positives**; with markers the same base reports 4 findings, all genuine.
-
-⚠️ **Keep entries and material at different levels.** Where a conclusion file sat
-beside the sample it described, the marker could not separate them — the material had
-to move into its own subdirectory first.
-
-### The compaction hook pair
-
-The capture trigger *"context is filling up / before compaction"* above had nothing
-firing it. Auto-compaction does not announce itself, so nobody remembers in time.
-Two hooks cover it, in **two layers that are deliberately separate**:
-
-| Layer | Who produces it | Reliable |
-|---|---|---|
-| skeleton: verbatim user requests, files touched, commands run, git state | the `PreCompact` script | **always** |
-| judgement: what was settled, what is open, what must not be undone | the model, after compaction | best effort |
-
-⚠️ **A hook cannot invoke a skill, and cannot make the model write anything.** It is a
-shell command, not a conversational turn. So layer 2 is a *request*, injected by the
-second hook — and layer 1 is built to be worth having on its own when that request is
-ignored.
-
-⚠️ **`PreCompact` stdout never reaches the model.** Only `SessionStart`,
-`UserPromptSubmit`, `UserPromptExpansion` and `PostModelSwitch` inject context. Asking
-the model for anything from `PreCompact` fails *silently*: the hook runs, exits 0, and
-the message goes nowhere. Hence `SessionStart` with matcher `compact`, which fires right
-*after* compaction — with the side benefit that the model then has a fresh summary in
-front of it.
-
-⚠️ **Neither script may call `os.getcwd()`.** The hooks are registered globally, so they
-fire in every project on the machine, and the process working directory is wherever the
-shell happens to stand — not the session's project. With `os.getcwd()` in the lookup
-chain, a session in project A wrote its checkpoint into project B's `BRAIN/`. The only
-admissible sources are `CLAUDE_PROJECT_DIR` and the `cwd` handed in on stdin. No `BRAIN/`
-there means **do nothing** — that is the correct outcome, not a reason to look elsewhere.
-
-Both hooks exit 0 whatever happens: one that breaks a session gets switched off after the
-first time and then saves nothing ever again. `SessionStart` stays **silent** when no
-skeleton is waiting, because noise is the surest way to make a control stop being read.
-
-**Because both always exit 0, the exit code proves nothing.** `test_hooks.py` checks the
-effect instead: whether a file appeared, *which project* it appeared in, what it contains,
-and that a second compaction does not overwrite the first. It found two bugs that way.
-
-It missed a third, and how it missed it is worth keeping. On a real compaction the
-checkpoint came out with **0 files and 0 user requests** while the transcript sat right
-there: `sys.stdin.read()` decodes with the system code page on Windows, so a session
-path holding any non-ASCII character turned into mojibake and the file "did not exist".
-
-The test could not see it for two reasons, and **both had to be fixed**:
-
-- it built its own transcript under an **ASCII path**, and
-- `json.dumps` defaults to `ensure_ascii=True`, so the bytes it fed to the hook were
-  pure ASCII — every decoder reads those correctly, and the case passed even with the
-  bug deliberately reinstated.
-
-⚠️ **A test that has never failed proves nothing.** Case D was only trusted after the
-bug was put back and it actually went red. Do the same to any case you add here.
-
-### Installing them
-
-`install-global.ps1` at the root of this repo links every `brain*` skill into
-`~/.claude/skills` as a junction and registers both hooks. Linking, not copying: one copy
-of the skill, in this git working tree, available in every project, updated everywhere by
-`git pull`.
-
-⚠️ **The hooks hold absolute paths into this clone.** Move or rename the clone and they
-break — while still firing and still exiting 0, so nothing appears to fail. Re-run the
-installer after any move, then `test_hooks.py`.
+How the nested-collection indexing, the compaction hook pair and the global installer work —
+and the lessons behind them — is in `reference/internals.md`. Read it only when changing those.
 
 Learnings and patterns may carry `confidence` (tentative | confirmed), `scope` (project | global)
 and `projects`; confirmed in 2+ projects makes an entry promotable to global — see

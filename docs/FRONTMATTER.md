@@ -49,11 +49,15 @@ these fields are unaffected. (Adapted from ECC's continuous-learning-v2, MIT.)
 
 ## Lifecycle
 
-Entries move through states rather than being deleted:
+**Retire** is the one word for taking an entry out of the active set. It is never a
+deletion, and it happens one of two ways, recorded in `status`:
 
 - **active** — current, trusted knowledge
 - **superseded** — replaced by a newer entry (keep for history; see `supersedes`)
 - **archived** — no longer relevant, kept for the record
+
+An entry that is replaced is retired as `superseded`; one that is merely finished with is
+retired as `archived`.
 
 `status` is how hot/cold separation works **without** moving files into new
 folders — the flat directory structure stays portable, and the index does the
