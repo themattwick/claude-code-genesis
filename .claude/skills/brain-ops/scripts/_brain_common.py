@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 
 ENTRY_DIRS = ["handoffs", "checkpoints", "sessions", "decisions", "bugs",
-              "learnings", "patterns", "glossary", "reference", "specs"]
+              "learnings", "patterns", "glossary", "reference", "specs", "removed"]
 SKIP_FILES = {"INDEX.md", "README.md", "QUICK-REFERENCE.md"}
 
 # A directory holding this file contains MATERIAL, not entries: sample output,
@@ -35,7 +35,7 @@ NOT_ENTRIES_MARKER = ".not-brain-entries"
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
 VALID_TYPES = {"checkpoint", "session", "decision", "bug", "learning",
-               "pattern", "handoff", "glossary", "reference", "spec"}
+               "pattern", "handoff", "glossary", "reference", "spec", "removal"}
 VALID_STATUSES = {"active", "superseded", "archived"}
 
 # Trust fields (optional). Adapted from the continuous-learning-v2 skill in ECC
@@ -53,7 +53,15 @@ LINK_FIELDS = ("links", "supersedes", "superseded_by")
 # listed here still gets its own section — appended alphabetically —
 # instead of silently vanishing from the index.
 PREFERRED_TYPE_ORDER = ["decision", "glossary", "spec", "learning", "pattern",
-                        "bug", "reference", "handoff", "session", "checkpoint"]
+                        "bug", "reference", "removal", "handoff", "session", "checkpoint"]
+
+# Folder -> type, where the type is not just the folder name minus its "s".
+TYPE_FROM_FOLDER = {"removed": "removal"}
+
+# A removal entry records something deliberately taken out, so nobody puts it back.
+# These four frontmatter fields are what the index shows and what hygiene requires.
+# Adapted from the living-docs-governance skill in ECC (affaan-m/ECC), MIT.
+REMOVAL_FIELDS = ("removed", "reason", "replacement", "return_if")
 
 # Section-header plurals that don't follow the plain "+s" rule.
 TYPE_PLURALS = {"glossary": "Glossary terms"}
@@ -162,7 +170,7 @@ def read_entry(path: Path, folder: str, brain_root: Path) -> dict:
     # that happens to contain one.
     sub = rel.parent.relative_to(folder).as_posix()
     return {
-        "type": meta.get("type", folder.rstrip("s")),
+        "type": meta.get("type", TYPE_FROM_FOLDER.get(folder, folder.rstrip("s"))),
         "status": meta.get("status", "active"),
         "date": meta.get("date") or (date_match.group(1) if date_match else "—"),
         "tags": meta.get("tags", []),
@@ -263,6 +271,16 @@ def content_lines(lines: list[str]) -> list[str]:
                 continue
         out.append(s)
     return out
+
+
+def field_text(meta: dict, key: str) -> str:
+    """A frontmatter field as one line of text. The parser turns `[a, b]` into a list,
+    so a list is joined back. A value that starts with TODO is an unfilled template
+    placeholder and counts as missing."""
+    value = meta.get(key, "")
+    text = ", ".join(value) if isinstance(value, list) else str(value)
+    text = text.strip()
+    return "" if text.upper().startswith("TODO") else text
 
 
 def as_list(value) -> list[str]:

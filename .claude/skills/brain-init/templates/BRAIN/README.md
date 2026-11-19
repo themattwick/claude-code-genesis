@@ -20,6 +20,7 @@ Native memory systems in AI coding tools do not communicate well with each other
   a concept's meaning drifted is kept, not overwritten.
 - `reference/` — External-fact lookups: where things live, API/vendor notes — not decisions, just facts to look up
 - `specs/` — Working documents: specs, worksheets, drafts-in-progress — not yet a settled decision
+- `removed/` — Things deliberately taken out, each with why, what replaced it, and the one condition for bringing it back. Shown at the top of `INDEX.md` so nobody restores them by accident.
 
 ## Rules
 

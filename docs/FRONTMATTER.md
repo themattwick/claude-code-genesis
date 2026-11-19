@@ -8,7 +8,7 @@ it makes entries filterable, gives them a lifecycle, and powers `BRAIN/INDEX.md`
 
 ```yaml
 ---
-type: decision          # checkpoint | session | decision | bug | learning | pattern | handoff | glossary
+type: decision          # checkpoint | session | decision | bug | learning | pattern | handoff | glossary | removal
 status: active          # active | superseded | archived
 date: 2026-06-12        # ISO date (YYYY-MM-DD)
 tags: [auth, jwt]       # free-form, lowercase

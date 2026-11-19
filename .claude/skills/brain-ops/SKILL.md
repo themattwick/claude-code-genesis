@@ -33,6 +33,7 @@ Act at these points without waiting to be asked:
 | Chose X over Y, with a real trade-off | `decisions/` entry | draft, then confirm |
 | Surprising or non-obvious discovery | `learnings/` entry | draft, then confirm |
 | A domain term was coined, clarified, or redefined | `glossary/` entry | draft, then confirm |
+| Something was deliberately removed (a feature, a file, a dependency, an approach) | `removed/` entry | draft, then confirm |
 | An external fact worth remembering (repo location, API/vendor note) | `reference/` entry | write |
 | A spec/worksheet exists but isn't a settled decision yet | `specs/` entry | write |
 | A task or phase just completed | checkpoint | write |
@@ -160,6 +161,21 @@ clarified, or redefined during the session.
 
 Output: the path written (and, if a redefinition, what changed), in one line.
 
+### remove
+
+Trigger: something was deliberately taken out, and someone might later put it back.
+
+1. Check `BRAIN/removed/` for an existing active entry about the same thing.
+2. Write `BRAIN/removed/YYYY-MM-DD-<slug>.md` from `templates/entries/removal.md`. All four
+   frontmatter fields are required: `removed`, `reason`, `replacement`, `return_if`
+   (`return_if: never` is a valid answer; an empty one is not).
+3. Regenerate the index — the entry then appears under *Deliberately removed — do not
+   restore* at the top of `INDEX.md`.
+4. If the thing is later restored, retire the entry (`status: archived`) and record why in a
+   `decisions/` entry. Never delete it.
+
+Output: the path written, in one line.
+
 ### hygiene
 
 Trigger: `brain hygiene`, before a handoff, or periodically.
@@ -179,6 +195,7 @@ Content checks, on active entries only (retired ones are history; a hook-written
 - `empty-checkpoint` — nothing under any heading. Only a title.
 - `checkpoint-incomplete` — `Left off` or `Next steps` present but empty.
 - `learning-incomplete` — a learning/pattern without a rule or a recognition signal.
+- `removal-incomplete` — a `removed/` entry missing any of its four fields.
 - `possible-duplicate` — a **heuristic** over titles and tags. It suggests; a real
   duplicate is the same root cause, and the fix is an example added to the older entry.
 
@@ -213,6 +230,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `templates/entries/bug-hard-case.md` | Hard bug write-ups during consolidation |
 | `templates/entries/learning-pattern.md` | Learnings and patterns: root cause, rule, recognition signal |
 | `templates/entries/glossary-term.md` | Domain term definitions |
+| `templates/entries/removal.md` | Deliberately removed things: why, replacement, return condition |
 | `templates/QUICK-REFERENCE.md` | Day-to-day cheat sheet |
 
 ## Scripts
@@ -226,6 +244,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 | `scripts/sessionstart_finish_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
 | `scripts/test_hooks.py` | **Proof the hooks work.** Exit 1 if anything fails |
 | `scripts/test_index.py` | **Proof the index is complete.** Exit 1 if anything fails |
+| `scripts/test_removed.py` | **Proof the removed zone shows and is enforced.** Exit 1 if anything fails |
 | `scripts/test_validation.py` | **Proof the content checks bite** (empty checkpoints, diary-style learnings, duplicates, `--strict`). Exit 1 if anything fails |
 | `scripts/test_frontmatter.py` | **Proof `confidence`/`scope`/`projects` work** and old entries are untouched. Exit 1 if anything fails |
 

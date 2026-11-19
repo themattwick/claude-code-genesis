@@ -37,6 +37,7 @@ BRAIN/
 ├── glossary/              # Domain terms, one file per term
 ├── reference/             # External-fact lookups (repo locations, API notes)
 ├── specs/                 # Specs, worksheets, drafts — working documents, not verdicts
+├── removed/               # Things deliberately taken out: why, replacement, return condition
 └── handoffs/              # Cross-model transfer docs
 ```
 

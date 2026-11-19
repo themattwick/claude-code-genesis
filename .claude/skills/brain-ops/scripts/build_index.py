@@ -16,7 +16,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from _brain_common import collect_entries, find_brain_root, order_types, pluralize_type
+from _brain_common import (REMOVAL_FIELDS, collect_entries, field_text, find_brain_root,
+                           order_types, pluralize_type)
 
 
 TRUST_TYPES = {"learning", "pattern"}
@@ -74,6 +75,19 @@ def render_type_section(entries: list[dict], trust: bool = False) -> str:
     return "\n".join(out)
 
 
+def render_removed(entries: list[dict]) -> str:
+    """The "do not restore" list: what was deliberately removed, why, what replaced
+    it, and the one condition under which bringing it back would be right. Four
+    fields, so a reader can act without opening the entry."""
+    def cell(e: dict, key: str) -> str:
+        return (field_text(e["meta"], key) or "—").replace("|", "\\|")
+    rows = ["| Removed | Why | Replacement | Return if |", "|---|---|---|---|"]
+    for e in sorted(entries, key=lambda x: x["date"], reverse=True):
+        rows.append(f"| [{cell(e, REMOVAL_FIELDS[0])}]({e['path']}) | "
+                    + " | ".join(cell(e, k) for k in REMOVAL_FIELDS[1:]) + " |")
+    return "\n".join(rows)
+
+
 def render_index(entries: list[dict]) -> str:
     active = [e for e in entries if e["status"] == "active"]
     retired = [e for e in entries if e["status"] != "active"]
@@ -103,11 +117,17 @@ def render_index(entries: list[dict]) -> str:
                    f"{sum(1 for e in trusted if e['confidence'] == 'tentative')} tentative")
     out.append("")
 
+    removed = [e for e in active if e["type"] == "removal"]
+    if removed:
+        out.append(f"### Deliberately removed — do not restore ({len(removed)})\n")
+        out.append(render_removed(removed) + "\n")
+
     # Active entries grouped by type. Known types render in a preferred
     # order; any other type (a typo, or a new one like "glossary") still
     # gets its own section instead of silently vanishing from the index.
     out.append("## Active knowledge\n")
-    present_types = {e["type"] for e in active}
+    # Removals already have their own block in the header; not listed twice.
+    present_types = {e["type"] for e in active if e["type"] != "removal"}
     for t in order_types(present_types):
         group = [e for e in active if e["type"] == t]
         if not group:

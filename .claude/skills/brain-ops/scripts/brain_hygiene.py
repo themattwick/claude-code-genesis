@@ -17,6 +17,7 @@ Checks performed:
   - checkpoint-incomplete   : new-style checkpoint with empty `Left off` / `Next steps`
   - learning-incomplete     : active learning/pattern without a portable rule or signal
   - possible-duplicate      : two active learnings/patterns/bugs that look like one
+  - removal-incomplete      : removal entry missing removed/reason/replacement/return_if
   - promotion-due           : confirmed in 2+ projects but still `scope: project`
   - global-unconfirmed      : `scope: global` without `confidence: confirmed`
 
@@ -34,9 +35,10 @@ from pathlib import Path
 
 import re
 
-from _brain_common import (LINK_FIELDS, PROMOTE_MIN_PROJECTS, VALID_CONFIDENCE,
+from _brain_common import (LINK_FIELDS, PROMOTE_MIN_PROJECTS, REMOVAL_FIELDS,
+                           VALID_CONFIDENCE,
                            VALID_SCOPES, VALID_STATUSES, VALID_TYPES, as_list,
-                           collect_entries, content_lines, find_brain_root,
+                           collect_entries, content_lines, field_text, find_brain_root,
                            split_sections)
 
 DEFAULT_STALE_DAYS = 14
@@ -255,6 +257,22 @@ def check_duplicates(entries: list[dict]) -> list[Finding]:
     return findings
 
 
+def check_removals(entries: list[dict]) -> list[Finding]:
+    """A removal without all four fields cannot do its job: without the reason nobody
+    can judge it, without a replacement nobody knows where the need went, without a
+    return condition nobody knows when it stops applying. `return_if: never` is a
+    valid answer - an empty one is not."""
+    findings = []
+    for e in entries:
+        if e["type"] != "removal" or e["status"] != "active":
+            continue
+        missing = [k for k in REMOVAL_FIELDS if not field_text(e["meta"], k)]
+        if missing:
+            findings.append(Finding("removal-incomplete", "MEDIUM", e["path"],
+                                    "missing frontmatter: " + ", ".join(missing)))
+    return findings
+
+
 def run_checks(brain_root: Path, entries: list[dict], days: int) -> list[Finding]:
     findings = (check_lifecycle(brain_root, entries)
                 + check_links(brain_root, entries)
@@ -263,7 +281,8 @@ def run_checks(brain_root: Path, entries: list[dict], days: int) -> list[Finding
                 + check_fields(entries)
                 + check_checkpoint_content(entries)
                 + check_learning_shape(entries)
-                + check_duplicates(entries))
+                + check_duplicates(entries)
+                + check_removals(entries))
     return sorted(findings, key=lambda f: (SEVERITY_ORDER[f.severity], f.check, f.path))
 
 
