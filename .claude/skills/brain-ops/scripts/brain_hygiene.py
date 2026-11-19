@@ -13,6 +13,10 @@ Checks performed:
   - stale-checkpoint        : active checkpoint older than --days, never consolidated
   - missing-frontmatter     : entry indexed only by folder + filename fallback
   - invalid-field           : type/status/confidence/scope outside the documented vocabulary
+  - empty-checkpoint        : active checkpoint with no content under any heading
+  - checkpoint-incomplete   : new-style checkpoint with empty `Left off` / `Next steps`
+  - learning-incomplete     : active learning/pattern without a portable rule or signal
+  - possible-duplicate      : two active learnings/patterns/bugs that look like one
   - promotion-due           : confirmed in 2+ projects but still `scope: project`
   - global-unconfirmed      : `scope: global` without `confidence: confirmed`
 
@@ -28,9 +32,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+import re
+
 from _brain_common import (LINK_FIELDS, PROMOTE_MIN_PROJECTS, VALID_CONFIDENCE,
                            VALID_SCOPES, VALID_STATUSES, VALID_TYPES, as_list,
-                           collect_entries, find_brain_root)
+                           collect_entries, content_lines, find_brain_root,
+                           split_sections)
 
 DEFAULT_STALE_DAYS = 14
 SEVERITY_ORDER = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
@@ -160,12 +167,103 @@ def check_fields(entries: list[dict]) -> list[Finding]:
     return findings
 
 
+def _sections(e: dict) -> dict[str, list[str]]:
+    return split_sections(e["file"].read_text(encoding="utf-8", errors="replace"))
+
+
+def check_checkpoint_content(entries: list[dict]) -> list[Finding]:
+    """A checkpoint that is only a title looks like continuity and carries none.
+
+    Only `status: active` is examined: the compaction hook writes `status: skeleton`
+    on purpose and the model completes it later; archived ones are history.
+    Checkpoints written before the mandatory-field schema have no `Left off` heading
+    and are judged only on whether they say anything at all.
+    """
+    findings = []
+    for e in entries:
+        if e["type"] != "checkpoint" or e["status"] != "active":
+            continue
+        sec = _sections(e)
+        if not any(content_lines(lines) for lines in sec.values()):
+            findings.append(Finding("empty-checkpoint", "MEDIUM", e["path"],
+                                    "no content under any heading - only a title"))
+            continue
+        missing = [name for name, key in (("Left off", "left off"),
+                                          ("Next steps", "next steps"))
+                   if key in sec and not content_lines(sec[key])]
+        if missing:
+            findings.append(Finding("checkpoint-incomplete", "MEDIUM", e["path"],
+                                    "empty mandatory section: " + ", ".join(missing)))
+    return findings
+
+
+def check_learning_shape(entries: list[dict]) -> list[Finding]:
+    """A learning or pattern must hold a portable rule and a recognition signal.
+
+    Without them it is a diary entry: true, and of no use the next time the
+    situation comes round. Retired entries are history and are not examined.
+    """
+    findings = []
+    for e in entries:
+        if e["type"] not in ("learning", "pattern") or e["status"] != "active":
+            continue
+        sec = _sections(e)
+        whole = "\n".join("\n".join(v) for v in sec.values())
+        missing = []
+        if not (content_lines(sec.get("rule", [])) or re.search(r"next time\b", whole, re.I)):
+            missing.append("a rule (\"Next time [situation], I will [action]\")")
+        if not any(content_lines(v) for k, v in sec.items() if "signal" in k):
+            missing.append("a recognition signal")
+        if missing:
+            findings.append(Finding("learning-incomplete", "MEDIUM", e["path"],
+                                    "missing " + " and ".join(missing)))
+    return findings
+
+
+_STOP = {"the", "and", "for", "with", "that", "this", "when", "not", "from", "are", "was",
+         "into", "must", "should", "never", "always"}
+
+
+def _tokens(title: str) -> set[str]:
+    return {w for w in re.findall(r"[^\W_]+", title.lower()) if len(w) > 2 and w not in _STOP}
+
+
+def check_duplicates(entries: list[dict]) -> list[Finding]:
+    """Heuristic only - it reads titles and tags, not meaning, so it SUGGESTS.
+
+    Two active learnings/patterns/bugs are a possible duplicate when their titles share
+    at least 60% of their words (Jaccard), or share 2+ tags and at least a third of
+    their words. A real duplicate is a different symptom of the SAME root cause: merge
+    by adding an example to the older entry. A false alarm costs one look.
+    """
+    pool = [e for e in entries
+            if e["type"] in ("learning", "pattern", "bug") and e["status"] == "active"]
+    findings = []
+    for i, a in enumerate(pool):
+        for b in pool[i + 1:]:
+            ta, tb = _tokens(a["title"]), _tokens(b["title"])
+            if not ta or not tb:
+                continue
+            jac = len(ta & tb) / len(ta | tb)
+            shared_tags = len({t.lower() for t in a["tags"]} & {t.lower() for t in b["tags"]})
+            if jac >= 0.6 or (shared_tags >= 2 and jac >= 0.34):
+                older, newer = sorted((a, b), key=lambda x: x["path"])
+                findings.append(Finding(
+                    "possible-duplicate", "LOW", newer["path"],
+                    f"looks like `{older['path']}` (title overlap {jac:.0%}, "
+                    f"{shared_tags} shared tags) - same root cause? add an example there"))
+    return findings
+
+
 def run_checks(brain_root: Path, entries: list[dict], days: int) -> list[Finding]:
     findings = (check_lifecycle(brain_root, entries)
                 + check_links(brain_root, entries)
                 + check_index(brain_root, entries)
                 + check_stale_checkpoints(entries, days)
-                + check_fields(entries))
+                + check_fields(entries)
+                + check_checkpoint_content(entries)
+                + check_learning_shape(entries)
+                + check_duplicates(entries))
     return sorted(findings, key=lambda f: (SEVERITY_ORDER[f.severity], f.check, f.path))
 
 

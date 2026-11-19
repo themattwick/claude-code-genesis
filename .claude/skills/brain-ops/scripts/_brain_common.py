@@ -215,6 +215,56 @@ def is_material(path: Path, folder_root: Path) -> bool:
         d = d.parent
 
 
+_BOLD_LABEL_RE = re.compile(r"^\*\*[^*]+:\*\*")
+_PLACEHOLDER_RE = re.compile(r"^[-*\d.\s]*\[[^\]]*\]\s*$")
+_TABLE_RULE_RE = re.compile(r"^\|[\s:\-|]+\|$")
+_EMPTY_ITEM_RE = re.compile(r"^(\d+\.|[-*])?\s*$")
+
+
+def split_sections(text: str) -> dict[str, list[str]]:
+    """Body of an entry as {lowercased heading: lines}. "" holds text before the first
+    heading. Frontmatter is dropped, and so is everything from the first `---` rule
+    onwards: a footer below the rule is template boilerplate ("Instructions for the
+    model...") and must never count as the entry's own content."""
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        text = text[end + 4:] if end != -1 else text
+    sections: dict[str, list[str]] = {"": []}
+    current = ""
+    for line in text.splitlines():
+        if line.strip() == "---":
+            break
+        m = re.match(r"^#{2,}\s+(.*?)\s*(<!--.*)?$", line)
+        if m:
+            current = m.group(1).strip().lower()
+            sections.setdefault(current, [])
+            continue
+        sections[current].append(line)
+    return sections
+
+
+def content_lines(lines: list[str]) -> list[str]:
+    """Lines that carry actual content: not blank, not a heading, comment, bold
+    `**Label:**` metadata line, unfilled `[placeholder]`, empty list item, or a
+    table header / rule / all-placeholder row."""
+    out = []
+    for i, raw in enumerate(lines):
+        s = raw.strip()
+        if (not s or s.startswith(("#", "<!--", "-->")) or _BOLD_LABEL_RE.match(s)
+                or _PLACEHOLDER_RE.match(s) or _EMPTY_ITEM_RE.match(s)
+                or _TABLE_RULE_RE.match(s)):
+            continue
+        if s.startswith("|"):
+            nxt = next((l.strip() for l in lines[i + 1:] if l.strip()), "")
+            if _TABLE_RULE_RE.match(nxt):          # header row of a table
+                continue
+            cells = [c.strip() for c in s.strip("|").split("|")]
+            if all(not c or (c.startswith("[") and c.endswith("]")) for c in cells):
+                continue
+        out.append(s)
+    return out
+
+
 def as_list(value) -> list[str]:
     """Normalize a frontmatter field that may be a scalar or a list."""
     if not value:

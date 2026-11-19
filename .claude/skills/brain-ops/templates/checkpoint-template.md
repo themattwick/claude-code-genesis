@@ -35,7 +35,7 @@ tags: []
 - [tests passing/failing, measured values, files created]
 
 ## Memory entries created in this block
-- `BRAIN/decisions/....md`
+- [paths of entries written in this block, or "none"]
 
 ---
 **Instructions for the model using this template:**

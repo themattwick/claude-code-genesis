@@ -74,8 +74,11 @@ do not create the structure by hand here; that is `brain-init`'s job.
 
 Trigger: `brain checkpoint [description]`, or a capture trigger above.
 
-1. Run `python .claude/skills/brain-ops/scripts/create_checkpoint.py "<short title>"`
-   — it writes a timestamped file with frontmatter and the section skeleton.
+1. Run `python .claude/skills/brain-ops/scripts/create_checkpoint.py "<short title>"
+   --summary "..." --left-off "..." --next "..." --next "..."` — it writes a
+   timestamped file with frontmatter and the section skeleton, with the mandatory
+   fields already filled. Without `--left-off` and `--next` it warns and leaves the
+   sections empty (`--strict` refuses to write at all).
 2. Fill the sections with concrete facts: file paths with line numbers, test counts,
    measured numbers. Not prose.
 3. **Two fields are mandatory: `Left off` and `Next steps`.** `Left off` names one concrete
@@ -170,6 +173,18 @@ Trigger: `brain hygiene`, before a handoff, or periodically.
 Do not hand-improvise the checks — the script is their definition, so the same
 knowledge base always yields the same findings.
 
+Content checks, on active entries only (retired ones are history; a hook-written
+`status: skeleton` checkpoint is waiting for the model and is skipped):
+
+- `empty-checkpoint` — nothing under any heading. Only a title.
+- `checkpoint-incomplete` — `Left off` or `Next steps` present but empty.
+- `learning-incomplete` — a learning/pattern without a rule or a recognition signal.
+- `possible-duplicate` — a **heuristic** over titles and tags. It suggests; a real
+  duplicate is the same root cause, and the fix is an example added to the older entry.
+
+Checkpoints written before the mandatory-field schema are judged only on whether they
+say anything at all. With `--strict`, any finding exits 1.
+
 ### report
 
 Trigger: `brain report`.
@@ -204,13 +219,14 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 
 | Script | Purpose |
 |---|---|
-| `scripts/create_checkpoint.py` | Timestamped checkpoint with frontmatter |
+| `scripts/create_checkpoint.py` | Timestamped checkpoint with frontmatter; `--left-off`/`--next` fill the mandatory fields, `--strict` refuses without them |
 | `scripts/build_index.py` | Regenerate `BRAIN/INDEX.md` |
 | `scripts/brain_hygiene.py` | Deterministic health report (`--days`, `--strict`) |
 | `scripts/precompact_checkpoint.py` | **Hook `PreCompact`** — writes the deterministic half of a checkpoint before compaction |
 | `scripts/sessionstart_finish_checkpoint.py` | **Hook `SessionStart` (matcher `compact`)** — asks the model to finish it |
 | `scripts/test_hooks.py` | **Proof the hooks work.** Exit 1 if anything fails |
 | `scripts/test_index.py` | **Proof the index is complete.** Exit 1 if anything fails |
+| `scripts/test_validation.py` | **Proof the content checks bite** (empty checkpoints, diary-style learnings, duplicates, `--strict`). Exit 1 if anything fails |
 | `scripts/test_frontmatter.py` | **Proof `confidence`/`scope`/`projects` work** and old entries are untouched. Exit 1 if anything fails |
 
 ### Nested collections, and material that is not an entry

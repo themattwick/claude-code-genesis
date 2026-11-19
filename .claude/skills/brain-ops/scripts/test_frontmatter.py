@@ -74,8 +74,10 @@ def main():
         p = by["2026-09-01-plain.md"]
         ok &= result(p["confidence"] == "" and p["scope"] == "project"
                      and not p["promotable"], "A. entry without fields: unchanged defaults")
-        ok &= result(not any(f.path.endswith("plain.md") for f in findings),
-                     "A. ... and no finding is raised for it")
+        trust_checks = ("invalid-field", "promotion-due", "global-unconfirmed")
+        ok &= result(not any(f.path.endswith("plain.md") and f.check in trust_checks
+                             for f in findings),
+                     "A. ... and no trust-field finding is raised for it")
 
         ok &= result(by["2026-09-02-promo.md"]["promotable"]
                      and by["2026-09-02-promo.md"]["scope"] == "global",
