@@ -1,6 +1,6 @@
 ---
 type: checkpoint
-status: active
+status: archived
 date: 2026-06-10
 tags: [auth, jwt]
 ---

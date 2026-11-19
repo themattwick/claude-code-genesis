@@ -133,8 +133,9 @@ durable knowledge **and retires the source**. Both halves are required.
    For learnings and patterns use `templates/entries/learning-pattern.md`: 4–8
    sentences, a title that names the pattern rather than the event, and the three
    required parts — root cause, a portable rule ("Next time [situation], I will
-   [action]"), and a recognition signal. For bug write-ups use
-   `templates/entries/bug-hard-case.md`.
+   [action]"), and a recognition signal. For decisions use
+   `templates/entries/decision.md`, with every real alternative and its cost listed,
+   plus the consequences. For bug write-ups use `templates/entries/bug-hard-case.md`.
 3. **Retire the sources**: set `status: archived` on every checkpoint you consolidated.
    Never delete — history stays, it just leaves the active set.
 4. If a new entry replaces an existing durable one, set `supersedes: <old-file>` on
@@ -227,6 +228,7 @@ python .claude/skills/brain-ops/scripts/build_index.py <project-root>
 |---|---|
 | `templates/checkpoint-template.md` | Shape of a checkpoint |
 | `templates/handoff-template.md` | Cross-model handoff document |
+| `templates/entries/decision.md` | Decisions: options considered (with costs), the choice, consequences |
 | `templates/entries/bug-hard-case.md` | Hard bug write-ups during consolidation |
 | `templates/entries/learning-pattern.md` | Learnings and patterns: root cause, rule, recognition signal |
 | `templates/entries/glossary-term.md` | Domain term definitions |
