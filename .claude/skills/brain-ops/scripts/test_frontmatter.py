@@ -15,9 +15,12 @@ scripts ran. Cases:
   E. invalid confidence / scope values are reported
   F. scope: global without confirmed -> global-unconfirmed
   G. an explicit `scope: global` entry is not reported as promotion-due
+  H. `tentative` past the threshold -> tentative-stale; recent, confirmed or
+     unstated confidence -> nothing (dates computed from today, not hardcoded)
 """
 import os
 import shutil
+from datetime import datetime, timedelta
 import sys
 import tempfile
 from pathlib import Path
@@ -25,7 +28,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _brain_common import collect_entries   # noqa: E402
-from brain_hygiene import run_checks        # noqa: E402
+from brain_hygiene import TENTATIVE_STALE_DAYS, run_checks  # noqa: E402
 from build_index import render_index        # noqa: E402
 
 
@@ -101,6 +104,21 @@ def main():
         ok &= result(not found("promotion-due", "glob.md")
                      and not found("global-unconfirmed", "glob.md"),
                      "G. explicit global + confirmed raises nothing")
+
+        old = (datetime.now() - timedelta(days=TENTATIVE_STALE_DAYS + 5)).strftime("%Y-%m-%d")
+        new = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+        T = tmp / "t" / "BRAIN"
+        (T / "checkpoints").mkdir(parents=True)
+        for name, date, conf in (("old-tent", old, "tentative"), ("new-tent", new, "tentative"),
+                                 ("old-conf", old, "confirmed"), ("old-unset", old, None)):
+            p = T / "learnings" / ("%s.md" % name)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text("---\ntype: learning\nstatus: active\ndate: %s\ntags: []\n%s---\n\n# %s\n"
+                         % (date, "confidence: %s\n" % conf if conf else "", name), encoding="utf-8")
+        stale = {f.path.split("/")[-1] for f in run_checks(T, collect_entries(T), 14)
+                 if f.check == "tentative-stale"}
+        ok &= result(stale == {"old-tent.md"},
+                     "H. only an old, explicitly tentative entry is tentative-stale", str(sorted(stale)))
 
         text = render_index(entries)
         ok &= result("| Date | Title | Confidence | Scope | Tags |" in text,

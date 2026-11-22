@@ -12,6 +12,8 @@
   G. a retired removal (status: archived) leaves the zone and is not re-checked
   H. a file in removed/ without a `type` falls back to type "removal"
   I. an unfilled copy of the removal template is flagged
+  J. a removed path that exists again is reported (HIGH); one that is gone is not
+  K. concepts, paths outside the project, and archived removals are not checked
 """
 import os
 import shutil
@@ -97,6 +99,36 @@ def main():
                      nt["type"])
         ok &= result(flagged("2026-11-17-template.md"),
                      "I. unfilled copy of the removal template is flagged")
+
+        # J/K. resurrection, in a fresh base so the cases above stay independent
+        proj = tmp / "proj"
+        R2 = proj / "BRAIN" / "removed"
+        (proj / "BRAIN" / "checkpoints").mkdir(parents=True)
+        (proj / "src").mkdir()
+        (proj / "src" / "old_sync.py").write_text("back again\n", encoding="utf-8")
+        (tmp / "outside.txt").write_text("not ours\n", encoding="utf-8")
+        base = dict(reason="r", replacement="x", return_if="never")
+        removal(R2 / "2026-11-20-back.md", "Back", removed="src/old_sync.py", **base)
+        removal(R2 / "2026-11-20-gone.md", "Gone", removed="src/deleted.py", **base)
+        removal(R2 / "2026-11-20-concept.md", "Concept", removed="the v1 sync approach", **base)
+        removal(R2 / "2026-11-20-escape.md", "Escape", removed="../outside.txt", **base)
+        removal(R2 / "2026-11-20-list.md", "List", removed="[src/deleted.py, src/old_sync.py]", **base)
+        removal(R2 / "2026-11-20-arch.md", "Arch", status="archived", removed="src/old_sync.py", **base)
+        f2 = run_checks(proj / "BRAIN", collect_entries(proj / "BRAIN"), 14)
+        res = {f.path.split("/")[-1] for f in f2 if f.check == "removal-resurrected"}
+        ok &= result("2026-11-20-back.md" in res
+                     and all(f.severity == "HIGH" for f in f2 if f.check == "removal-resurrected"),
+                     "J. removed path that exists again -> HIGH removal-resurrected")
+        ok &= result("2026-11-20-gone.md" not in res, "J. removed path that is gone -> nothing")
+        ok &= result("2026-11-20-list.md" in res, "J. one live path inside a list is caught")
+        # A concept never exists on disk, so the end-to-end result cannot tell whether
+        # it was treated as a path. Check the classifier itself.
+        from brain_hygiene import _path_like
+        ok &= result(not _path_like("the v1 sync approach") and not _path_like("legacy sync")
+                     and _path_like("src/old_sync.py") and _path_like("install.ps1"),
+                     "K. a concept is not treated as a path; a file or path is")
+        ok &= result("2026-11-20-escape.md" not in res, "K. a path outside the project is ignored")
+        ok &= result("2026-11-20-arch.md" not in res, "K. an archived removal is not checked")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

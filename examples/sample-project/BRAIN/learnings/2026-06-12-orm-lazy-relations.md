@@ -3,7 +3,7 @@ type: learning
 status: active
 date: 2026-06-12
 tags: [orm, performance, testing]
-confidence: tentative
+confidence: confirmed
 scope: project
 projects: [taskflow]
 links: [bugs/2026-06-11-task-list-n-plus-1.md, patterns/2026-06-13-query-count-ceiling.md]

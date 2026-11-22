@@ -44,7 +44,8 @@ projects: [shop, api]   # optional — where it was confirmed
 An entry with `confidence: confirmed` that lists **2 or more distinct `projects`** is
 *promotable*: the index shows its scope as `global (promoted)` and `brain hygiene`
 reports `promotion-due` until you set `scope: global` in the file. `scope: global`
-without `confidence: confirmed` is reported as `global-unconfirmed`. Entries without
+without `confidence: confirmed` is reported as `global-unconfirmed`, and an entry left
+`tentative` for more than 60 days as `tentative-stale`. Entries without
 these fields are unaffected. (Adapted from ECC's continuous-learning-v2, MIT.)
 
 ## Lifecycle

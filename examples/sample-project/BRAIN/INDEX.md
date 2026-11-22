@@ -1,12 +1,12 @@
 # BRAIN — Index
 
-_Auto-generated 2026-11-19 23:02. Do not edit by hand — run `build_index.py`._
+_Auto-generated 2026-11-22 01:45. Do not edit by hand — run `build_index.py`._
 
 ## Current state
 
 - **Latest handoff:** [HANDOFF — Claude → Grok — 2026-06-12](handoffs/2026-06-12-claude-to-grok.md) (2026-06-12)
 - **Active entries:** 5  ·  **Retired:** 3
-- **Learnings & patterns:** 0 global  ·  2 tentative
+- **Learnings & patterns:** 0 global  ·  0 tentative
 
 ## Active knowledge
 
@@ -20,13 +20,13 @@ _Auto-generated 2026-11-19 23:02. Do not edit by hand — run `build_index.py`._
 
 | Date | Title | Confidence | Scope | Tags |
 |------|-------|------------|-------|------|
-| 2026-06-12 | [Learning — Lazy ORM relations are an N+1 trap in list endpoints](learnings/2026-06-12-orm-lazy-relations.md) | tentative | project | `orm`, `performance`, `testing` |
+| 2026-06-12 | [Learning — Lazy ORM relations are an N+1 trap in list endpoints](learnings/2026-06-12-orm-lazy-relations.md) | confirmed | project | `orm`, `performance`, `testing` |
 
 ### Patterns (1)
 
 | Date | Title | Confidence | Scope | Tags |
 |------|-------|------------|-------|------|
-| 2026-06-13 | [Pattern — Assert a query-count ceiling on list endpoints](patterns/2026-06-13-query-count-ceiling.md) | tentative | project | `testing`, `performance`, `orm` |
+| 2026-06-13 | [Pattern — Assert a query-count ceiling on list endpoints](patterns/2026-06-13-query-count-ceiling.md) | confirmed | project | `testing`, `performance`, `orm` |
 
 ### Bugs (1)
 

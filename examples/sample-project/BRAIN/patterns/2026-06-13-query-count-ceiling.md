@@ -3,7 +3,7 @@ type: pattern
 status: active
 date: 2026-06-13
 tags: [testing, performance, orm]
-confidence: tentative
+confidence: confirmed
 scope: project
 projects: [taskflow]
 links: [bugs/2026-06-11-task-list-n-plus-1.md, learnings/2026-06-12-orm-lazy-relations.md]

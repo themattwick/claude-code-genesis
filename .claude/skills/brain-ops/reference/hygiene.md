@@ -21,6 +21,10 @@ Content checks, on active entries only (retired ones are history; a hook-written
 - `checkpoint-incomplete` — `Left off` or `Next steps` present but empty.
 - `learning-incomplete` — a learning/pattern without a rule or a recognition signal.
 - `removal-incomplete` — a `removed/` entry missing any of its four fields.
+- `removal-resurrected` (HIGH) — a path listed in `removed:` exists again in the project.
+  Remove it again, or retire the entry and record the reversal in `decisions/`.
+- `tentative-stale` — a learning/pattern still `confidence: tentative` after 60 days.
+  Confirm it or retire it. Entries that never stated a confidence are not flagged.
 - `possible-duplicate` — a **heuristic** over titles and tags. It suggests; a real
   duplicate is the same root cause, and the fix is an example added to the older entry.
 

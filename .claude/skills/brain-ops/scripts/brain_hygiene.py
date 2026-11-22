@@ -18,6 +18,8 @@ Checks performed:
   - learning-incomplete     : active learning/pattern without a portable rule or signal
   - possible-duplicate      : two active learnings/patterns/bugs that look like one
   - removal-incomplete      : removal entry missing removed/reason/replacement/return_if
+  - removal-resurrected     : a path listed as removed exists again in the project
+  - tentative-stale         : learning/pattern still `tentative` after TENTATIVE_STALE_DAYS
   - promotion-due           : confirmed in 2+ projects but still `scope: project`
   - global-unconfirmed      : `scope: global` without `confidence: confirmed`
 
@@ -42,6 +44,9 @@ from _brain_common import (LINK_FIELDS, PROMOTE_MIN_PROJECTS, REMOVAL_FIELDS,
                            split_sections)
 
 DEFAULT_STALE_DAYS = 14
+# A rule nobody has confirmed in two months is either true and unrecorded, or wrong.
+# Either way it needs a decision: confirm it, or retire it.
+TENTATIVE_STALE_DAYS = 60
 SEVERITY_ORDER = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
 
 
@@ -273,6 +278,58 @@ def check_removals(entries: list[dict]) -> list[Finding]:
     return findings
 
 
+def _path_like(token: str) -> bool:
+    """A `removed:` value that names a file or directory, not a concept. Conservative:
+    no spaces, and either a separator or a file extension."""
+    return bool(token) and " " not in token and ("/" in token or "\\" in token
+                                                   or re.search(r"\.[A-Za-z0-9]{1,8}$", token))
+
+
+def check_resurrections(brain_root: Path, entries: list[dict]) -> list[Finding]:
+    """A path listed as deliberately removed must not exist again.
+
+    Without this the removed zone is only a note: nothing notices when the thing
+    comes back. Paths are resolved against the project root (the folder holding
+    BRAIN/) and must stay inside it. Concepts ("the v1 sync approach") are not
+    paths and are skipped. Adapted from check_status_resurrection in ECC's
+    docs-governance audit (affaan-m/ECC), MIT.
+    """
+    root = brain_root.parent.resolve()
+    findings = []
+    for e in entries:
+        if e["type"] != "removal" or e["status"] != "active":
+            continue
+        for token in (t.strip().strip("`") for t in field_text(e["meta"], "removed").split(",")):
+            if not _path_like(token):
+                continue
+            target = (root / token.replace("\\", "/")).resolve()
+            if target != root and root in target.parents and target.exists():
+                findings.append(Finding(
+                    "removal-resurrected", "HIGH", e["path"],
+                    f"`{token}` is listed as removed but exists again - remove it, or "
+                    f"retire this entry (status: archived) and record why in decisions/"))
+    return findings
+
+
+def check_tentative(entries: list[dict], days: int = TENTATIVE_STALE_DAYS) -> list[Finding]:
+    """Learnings and patterns left `tentative` too long. Only an explicit
+    `confidence: tentative` counts - an entry that never stated a confidence is
+    not assumed to be tentative."""
+    now = datetime.now()
+    findings = []
+    for e in entries:
+        if (e["type"] not in ("learning", "pattern") or e["status"] != "active"
+                or e["confidence"] != "tentative"):
+            continue
+        dt = parse_date(e["date"])
+        if dt is not None and (now - dt).days > days:
+            findings.append(Finding(
+                "tentative-stale", "LOW", e["path"],
+                f"tentative for {(now - dt).days} days - confirm it "
+                f"(confidence: confirmed) or retire it"))
+    return findings
+
+
 def run_checks(brain_root: Path, entries: list[dict], days: int) -> list[Finding]:
     findings = (check_lifecycle(brain_root, entries)
                 + check_links(brain_root, entries)
@@ -282,7 +339,9 @@ def run_checks(brain_root: Path, entries: list[dict], days: int) -> list[Finding
                 + check_checkpoint_content(entries)
                 + check_learning_shape(entries)
                 + check_duplicates(entries)
-                + check_removals(entries))
+                + check_removals(entries)
+                + check_resurrections(brain_root, entries)
+                + check_tentative(entries))
     return sorted(findings, key=lambda f: (SEVERITY_ORDER[f.severity], f.check, f.path))
 
 
