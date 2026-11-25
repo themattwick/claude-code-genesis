@@ -18,6 +18,7 @@ BRAIN/
 ├── learnings/        # extracted insights (durable)
 ├── patterns/         # reusable patterns (durable)
 ├── glossary/         # domain terms, one file per term (durable)
+├── removed/          # deliberately removed things: why, replacement, return condition (durable)
 └── handoffs/         # cross-model transfer documents
 ```
 

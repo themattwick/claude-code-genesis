@@ -16,18 +16,37 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from _brain_common import collect_entries, find_brain_root, order_types, pluralize_type
+from _brain_common import (REMOVAL_FIELDS, collect_entries, field_text, find_brain_root,
+                           order_types, pluralize_type)
 
 
-def render_table(entries: list[dict]) -> str:
-    rows = ["| Date | Title | Tags |", "|------|-------|------|"]
+TRUST_TYPES = {"learning", "pattern"}
+
+
+def scope_label(e: dict) -> str:
+    return "global (promoted)" if e["promotable"] else e["scope"]
+
+
+def render_table(entries: list[dict], trust: bool = False) -> str:
+    """`trust` adds Confidence and Scope columns (learnings and patterns only —
+    the fields mean little for a checkpoint, and a column of dashes is noise)."""
+    if trust:
+        rows = ["| Date | Title | Confidence | Scope | Tags |",
+                "|------|-------|------------|-------|------|"]
+    else:
+        rows = ["| Date | Title | Tags |", "|------|-------|------|"]
     for e in sorted(entries, key=lambda x: x["date"], reverse=True):
         tags = ", ".join(f"`{t}`" for t in e["tags"]) or "—"
-        rows.append(f"| {e['date']} | [{e['title']}]({e['path']}) | {tags} |")
+        link = f"[{e['title']}]({e['path']})"
+        if trust:
+            rows.append(f"| {e['date']} | {link} | {e['confidence'] or '—'} | "
+                        f"{scope_label(e)} | {tags} |")
+        else:
+            rows.append(f"| {e['date']} | {link} | {tags} |")
     return "\n".join(rows)
 
 
-def render_type_section(entries: list[dict]) -> str:
+def render_type_section(entries: list[dict], trust: bool = False) -> str:
     """One type's entries: the loose ones as a table, each nested collection
     as its own subsection.
 
@@ -40,7 +59,7 @@ def render_type_section(entries: list[dict]) -> str:
     loose = [e for e in entries if not e["group"]]
     out = []
     if loose:
-        out.append(render_table(loose) + "\n")
+        out.append(render_table(loose, trust) + "\n")
 
     grouped: dict[str, list[dict]] = {}
     for e in entries:
@@ -52,8 +71,21 @@ def render_type_section(entries: list[dict]) -> str:
     for name in sorted(grouped):
         members = grouped[name]
         out.append(f"#### `{name}/` ({len(members)})\n")
-        out.append(render_table(members) + "\n")
+        out.append(render_table(members, trust) + "\n")
     return "\n".join(out)
+
+
+def render_removed(entries: list[dict]) -> str:
+    """The "do not restore" list: what was deliberately removed, why, what replaced
+    it, and the one condition under which bringing it back would be right. Four
+    fields, so a reader can act without opening the entry."""
+    def cell(e: dict, key: str) -> str:
+        return (field_text(e["meta"], key) or "—").replace("|", "\\|")
+    rows = ["| Removed | Why | Replacement | Return if |", "|---|---|---|---|"]
+    for e in sorted(entries, key=lambda x: x["date"], reverse=True):
+        rows.append(f"| [{cell(e, REMOVAL_FIELDS[0])}]({e['path']}) | "
+                    + " | ".join(cell(e, k) for k in REMOVAL_FIELDS[1:]) + " |")
+    return "\n".join(rows)
 
 
 def render_index(entries: list[dict]) -> str:
@@ -77,19 +109,31 @@ def render_index(entries: list[dict]) -> str:
         out.append(f"- **Last checkpoint:** [{latest_cp['title']}]({latest_cp['path']}) "
                    f"({latest_cp['date']})")
     out.append(f"- **Active entries:** {len(active)}  ·  "
-               f"**Retired:** {len(retired)}\n")
+               f"**Retired:** {len(retired)}")
+    trusted = [e for e in active if e["type"] in TRUST_TYPES]
+    if trusted:
+        out.append(f"- **Learnings & patterns:** "
+                   f"{sum(1 for e in trusted if e['scope'] == 'global')} global  ·  "
+                   f"{sum(1 for e in trusted if e['confidence'] == 'tentative')} tentative")
+    out.append("")
+
+    removed = [e for e in active if e["type"] == "removal"]
+    if removed:
+        out.append(f"### Deliberately removed — do not restore ({len(removed)})\n")
+        out.append(render_removed(removed) + "\n")
 
     # Active entries grouped by type. Known types render in a preferred
     # order; any other type (a typo, or a new one like "glossary") still
     # gets its own section instead of silently vanishing from the index.
     out.append("## Active knowledge\n")
-    present_types = {e["type"] for e in active}
+    # Removals already have their own block in the header; not listed twice.
+    present_types = {e["type"] for e in active if e["type"] != "removal"}
     for t in order_types(present_types):
         group = [e for e in active if e["type"] == t]
         if not group:
             continue
         out.append(f"### {pluralize_type(t)} ({len(group)})\n")
-        out.append(render_type_section(group))
+        out.append(render_type_section(group, trust=t in TRUST_TYPES))
 
     # Retired (superseded / archived) — kept out of the way
     if retired:

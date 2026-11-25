@@ -12,7 +12,16 @@ Checks performed:
   - stale-index             : INDEX.md missing or older than the newest entry
   - stale-checkpoint        : active checkpoint older than --days, never consolidated
   - missing-frontmatter     : entry indexed only by folder + filename fallback
-  - invalid-field           : type/status outside the documented vocabulary
+  - invalid-field           : type/status/confidence/scope outside the documented vocabulary
+  - empty-checkpoint        : active checkpoint with no content under any heading
+  - checkpoint-incomplete   : new-style checkpoint with empty `Left off` / `Next steps`
+  - learning-incomplete     : active learning/pattern without a portable rule or signal
+  - possible-duplicate      : two active learnings/patterns/bugs that look like one
+  - removal-incomplete      : removal entry missing removed/reason/replacement/return_if
+  - removal-resurrected     : a path listed as removed exists again in the project
+  - tentative-stale         : learning/pattern still `tentative` after TENTATIVE_STALE_DAYS
+  - promotion-due           : confirmed in 2+ projects but still `scope: project`
+  - global-unconfirmed      : `scope: global` without `confidence: confirmed`
 
 Zero external dependencies.
 
@@ -26,10 +35,18 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from _brain_common import (LINK_FIELDS, VALID_STATUSES, VALID_TYPES, as_list,
-                           collect_entries, find_brain_root)
+import re
+
+from _brain_common import (LINK_FIELDS, PROMOTE_MIN_PROJECTS, REMOVAL_FIELDS,
+                           VALID_CONFIDENCE,
+                           VALID_SCOPES, VALID_STATUSES, VALID_TYPES, as_list,
+                           collect_entries, content_lines, field_text, find_brain_root,
+                           split_sections)
 
 DEFAULT_STALE_DAYS = 14
+# A rule nobody has confirmed in two months is either true and unrecorded, or wrong.
+# Either way it needs a decision: confirm it, or retire it.
+TENTATIVE_STALE_DAYS = 60
 SEVERITY_ORDER = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
 
 
@@ -121,7 +138,7 @@ def check_stale_checkpoints(entries: list[dict], days: int) -> list[Finding]:
         if age > days:
             findings.append(Finding(
                 "stale-checkpoint", "MEDIUM", e["path"],
-                f"{age} days old and still active - consolidate then archive"))
+                f"{age} days old and still active - consolidate then retire"))
     return findings
 
 
@@ -139,6 +156,177 @@ def check_fields(entries: list[dict]) -> list[Finding]:
         if e["status"] not in VALID_STATUSES:
             findings.append(Finding("invalid-field", "MEDIUM", e["path"],
                                     f"unknown status: {e['status']}"))
+        if e["confidence"] and e["confidence"] not in VALID_CONFIDENCE:
+            findings.append(Finding("invalid-field", "MEDIUM", e["path"],
+                                    f"unknown confidence: {e['confidence']}"))
+        if e["stated_scope"] not in VALID_SCOPES:
+            findings.append(Finding("invalid-field", "MEDIUM", e["path"],
+                                    f"unknown scope: {e['stated_scope']}"))
+        if e["promotable"]:
+            findings.append(Finding(
+                "promotion-due", "LOW", e["path"],
+                f"confirmed in {len(e['projects'])} projects "
+                f"(threshold {PROMOTE_MIN_PROJECTS}) - set `scope: global`"))
+        if e["stated_scope"] == "global" and e["confidence"] != "confirmed":
+            findings.append(Finding(
+                "global-unconfirmed", "LOW", e["path"],
+                "scope is global but confidence is not `confirmed`"))
+    return findings
+
+
+def _sections(e: dict) -> dict[str, list[str]]:
+    return split_sections(e["file"].read_text(encoding="utf-8", errors="replace"))
+
+
+def check_checkpoint_content(entries: list[dict]) -> list[Finding]:
+    """A checkpoint that is only a title looks like continuity and carries none.
+
+    Only `status: active` is examined: the compaction hook writes `status: skeleton`
+    on purpose and the model completes it later; archived ones are history.
+    Checkpoints written before the mandatory-field schema have no `Left off` heading
+    and are judged only on whether they say anything at all.
+    """
+    findings = []
+    for e in entries:
+        if e["type"] != "checkpoint" or e["status"] != "active":
+            continue
+        sec = _sections(e)
+        if not any(content_lines(lines) for lines in sec.values()):
+            findings.append(Finding("empty-checkpoint", "MEDIUM", e["path"],
+                                    "no content under any heading - only a title"))
+            continue
+        missing = [name for name, key in (("Left off", "left off"),
+                                          ("Next steps", "next steps"))
+                   if key in sec and not content_lines(sec[key])]
+        if missing:
+            findings.append(Finding("checkpoint-incomplete", "MEDIUM", e["path"],
+                                    "empty mandatory section: " + ", ".join(missing)))
+    return findings
+
+
+def check_learning_shape(entries: list[dict]) -> list[Finding]:
+    """A learning or pattern must hold a portable rule and a recognition signal.
+
+    Without them it is a diary entry: true, and of no use the next time the
+    situation comes round. Retired entries are history and are not examined.
+    """
+    findings = []
+    for e in entries:
+        if e["type"] not in ("learning", "pattern") or e["status"] != "active":
+            continue
+        sec = _sections(e)
+        whole = "\n".join("\n".join(v) for v in sec.values())
+        missing = []
+        if not (content_lines(sec.get("rule", [])) or re.search(r"next time\b", whole, re.I)):
+            missing.append("a rule (\"Next time [situation], I will [action]\")")
+        if not any(content_lines(v) for k, v in sec.items() if "signal" in k):
+            missing.append("a recognition signal")
+        if missing:
+            findings.append(Finding("learning-incomplete", "MEDIUM", e["path"],
+                                    "missing " + " and ".join(missing)))
+    return findings
+
+
+_STOP = {"the", "and", "for", "with", "that", "this", "when", "not", "from", "are", "was",
+         "into", "must", "should", "never", "always"}
+
+
+def _tokens(title: str) -> set[str]:
+    return {w for w in re.findall(r"[^\W_]+", title.lower()) if len(w) > 2 and w not in _STOP}
+
+
+def check_duplicates(entries: list[dict]) -> list[Finding]:
+    """Heuristic only - it reads titles and tags, not meaning, so it SUGGESTS.
+
+    Two active learnings/patterns/bugs are a possible duplicate when their titles share
+    at least 60% of their words (Jaccard), or share 2+ tags and at least a third of
+    their words. A real duplicate is a different symptom of the SAME root cause: merge
+    by adding an example to the older entry. A false alarm costs one look.
+    """
+    pool = [e for e in entries
+            if e["type"] in ("learning", "pattern", "bug") and e["status"] == "active"]
+    findings = []
+    for i, a in enumerate(pool):
+        for b in pool[i + 1:]:
+            ta, tb = _tokens(a["title"]), _tokens(b["title"])
+            if not ta or not tb:
+                continue
+            jac = len(ta & tb) / len(ta | tb)
+            shared_tags = len({t.lower() for t in a["tags"]} & {t.lower() for t in b["tags"]})
+            if jac >= 0.6 or (shared_tags >= 2 and jac >= 0.34):
+                older, newer = sorted((a, b), key=lambda x: x["path"])
+                findings.append(Finding(
+                    "possible-duplicate", "LOW", newer["path"],
+                    f"looks like `{older['path']}` (title overlap {jac:.0%}, "
+                    f"{shared_tags} shared tags) - same root cause? add an example there"))
+    return findings
+
+
+def check_removals(entries: list[dict]) -> list[Finding]:
+    """A removal without all four fields cannot do its job: without the reason nobody
+    can judge it, without a replacement nobody knows where the need went, without a
+    return condition nobody knows when it stops applying. `return_if: never` is a
+    valid answer - an empty one is not."""
+    findings = []
+    for e in entries:
+        if e["type"] != "removal" or e["status"] != "active":
+            continue
+        missing = [k for k in REMOVAL_FIELDS if not field_text(e["meta"], k)]
+        if missing:
+            findings.append(Finding("removal-incomplete", "MEDIUM", e["path"],
+                                    "missing frontmatter: " + ", ".join(missing)))
+    return findings
+
+
+def _path_like(token: str) -> bool:
+    """A `removed:` value that names a file or directory, not a concept. Conservative:
+    no spaces, and either a separator or a file extension."""
+    return bool(token) and " " not in token and ("/" in token or "\\" in token
+                                                   or re.search(r"\.[A-Za-z0-9]{1,8}$", token))
+
+
+def check_resurrections(brain_root: Path, entries: list[dict]) -> list[Finding]:
+    """A path listed as deliberately removed must not exist again.
+
+    Without this the removed zone is only a note: nothing notices when the thing
+    comes back. Paths are resolved against the project root (the folder holding
+    BRAIN/) and must stay inside it. Concepts ("the v1 sync approach") are not
+    paths and are skipped. Adapted from check_status_resurrection in ECC's
+    docs-governance audit (affaan-m/ECC), MIT.
+    """
+    root = brain_root.parent.resolve()
+    findings = []
+    for e in entries:
+        if e["type"] != "removal" or e["status"] != "active":
+            continue
+        for token in (t.strip().strip("`") for t in field_text(e["meta"], "removed").split(",")):
+            if not _path_like(token):
+                continue
+            target = (root / token.replace("\\", "/")).resolve()
+            if target != root and root in target.parents and target.exists():
+                findings.append(Finding(
+                    "removal-resurrected", "HIGH", e["path"],
+                    f"`{token}` is listed as removed but exists again - remove it, or "
+                    f"retire this entry (status: archived) and record why in decisions/"))
+    return findings
+
+
+def check_tentative(entries: list[dict], days: int = TENTATIVE_STALE_DAYS) -> list[Finding]:
+    """Learnings and patterns left `tentative` too long. Only an explicit
+    `confidence: tentative` counts - an entry that never stated a confidence is
+    not assumed to be tentative."""
+    now = datetime.now()
+    findings = []
+    for e in entries:
+        if (e["type"] not in ("learning", "pattern") or e["status"] != "active"
+                or e["confidence"] != "tentative"):
+            continue
+        dt = parse_date(e["date"])
+        if dt is not None and (now - dt).days > days:
+            findings.append(Finding(
+                "tentative-stale", "LOW", e["path"],
+                f"tentative for {(now - dt).days} days - confirm it "
+                f"(confidence: confirmed) or retire it"))
     return findings
 
 
@@ -147,7 +335,13 @@ def run_checks(brain_root: Path, entries: list[dict], days: int) -> list[Finding
                 + check_links(brain_root, entries)
                 + check_index(brain_root, entries)
                 + check_stale_checkpoints(entries, days)
-                + check_fields(entries))
+                + check_fields(entries)
+                + check_checkpoint_content(entries)
+                + check_learning_shape(entries)
+                + check_duplicates(entries)
+                + check_removals(entries)
+                + check_resurrections(brain_root, entries)
+                + check_tentative(entries))
     return sorted(findings, key=lambda f: (SEVERITY_ORDER[f.severity], f.check, f.path))
 
 

@@ -5,7 +5,8 @@ description: >
   Creates the full BRAIN/ directory structure, a README, a QUICK-REFERENCE cheat sheet,
   and an optional reminder hook.
   Use this when starting a new serious project that needs long-term cross-model knowledge.
-  Recommended invocation: "brain init" or "brain setup".
+  Invoke explicitly with /brain-init (not model-invoked).
+disable-model-invocation: true
 metadata:
   short-description: "Bootstrap / initialize Project BRAIN (one-time setup)"
   category: "workflow"
@@ -18,9 +19,10 @@ Performs the **one-time setup** of Project BRAIN for a new project.
 
 ## Usage
 
-- "brain init"
-- "brain setup"
-- "brain bootstrap"
+- `/brain-init` — the reliable way. This skill is user-invoked only
+  (`disable-model-invocation: true`): its description costs no context on every request.
+- "brain init" / "brain setup" / "brain bootstrap" go through the `brain` router, which
+  cannot start a user-invoked skill and will tell you to run `/brain-init`.
 
 ## What It Creates
 
@@ -37,6 +39,7 @@ BRAIN/
 ├── glossary/              # Domain terms, one file per term
 ├── reference/             # External-fact lookups (repo locations, API notes)
 ├── specs/                 # Specs, worksheets, drafts — working documents, not verdicts
+├── removed/               # Things deliberately taken out: why, replacement, return condition
 └── handoffs/              # Cross-model transfer docs
 ```
 

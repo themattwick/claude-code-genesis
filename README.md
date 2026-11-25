@@ -29,7 +29,7 @@ cp -r claude-code-genesis/.claude/skills/brain* your-project/.claude/skills/
 Then use them in any Claude Code session:
 
 ```
-brain setup          # one-time project init
+/brain-init         # one-time project init (user-invoked)
 brain checkpoint "Designed database schema"
 brain load           # check current state
 brain handoff        # prepare context for another model
@@ -58,8 +58,7 @@ Entries aren't dumped and forgotten — they move through a lifecycle. Capture i
 
 ```bash
 # Setup & initialization
-brain setup                      # One-time project setup
-brain init                       # Alternative to setup
+/brain-init                      # One-time project setup (user-invoked skill)
 
 # Daily operations
 brain checkpoint "description"   # Save progress snapshot
@@ -81,7 +80,7 @@ brain recall "topic"             # Find pattern (v1.1)
 
 ### BRAIN Directory Structure
 
-Each project gets a `BRAIN/` directory after running `brain setup`:
+Each project gets a `BRAIN/` directory after running `/brain-init`:
 
 ```
 BRAIN/

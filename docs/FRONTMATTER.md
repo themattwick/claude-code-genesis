@@ -8,14 +8,20 @@ it makes entries filterable, gives them a lifecycle, and powers `BRAIN/INDEX.md`
 
 ```yaml
 ---
-type: decision          # checkpoint | session | decision | bug | learning | pattern | handoff | glossary
+type: decision          # checkpoint | session | decision | bug | learning | pattern | handoff | glossary | removal
 status: active          # active | superseded | archived
 date: 2026-06-12        # ISO date (YYYY-MM-DD)
 tags: [auth, jwt]       # free-form, lowercase
 supersedes: 2026-05-01-old-auth.md     # optional — this entry replaces that one
 superseded_by: 2026-07-01-new-auth.md  # optional — set on the old entry, points forward
 links: [bugs/2026-06-11-n-plus-1.md]   # optional — related entries
+confidence: tentative   # optional — tentative | confirmed (learnings and patterns)
+scope: project          # optional — project | global
+projects: [shop, api]   # optional — where it was confirmed
 ---
+
+> Write the comment-free form in real entries: `type: decision`, not
+> `type: decision   # …`. The parser reads everything after the colon as the value.
 ```
 
 ## Fields
@@ -29,14 +35,30 @@ links: [bugs/2026-06-11-n-plus-1.md]   # optional — related entries
 | `supersedes` | optional | Filename of the entry this one replaces. Pair with `status: superseded` on the old entry. |
 | `superseded_by` | optional | Set on the old entry, pointing forward to its replacement. `brain hygiene` flags a mismatch between the two sides. |
 | `links` | optional | Related entries, as `folder/filename.md` paths. The basis for the future backlink graph. |
+| `confidence` | optional | `tentative` or `confirmed`. Meant for learnings and patterns. Missing = not stated (shown as "—"); it is never assumed to be `tentative`. |
+| `scope` | optional | `project` (default) or `global`. |
+| `projects` | optional | Projects in which the entry was confirmed. Used for promotion. |
+
+### Promotion to global
+
+An entry with `confidence: confirmed` that lists **2 or more distinct `projects`** is
+*promotable*: the index shows its scope as `global (promoted)` and `brain hygiene`
+reports `promotion-due` until you set `scope: global` in the file. `scope: global`
+without `confidence: confirmed` is reported as `global-unconfirmed`, and an entry left
+`tentative` for more than 60 days as `tentative-stale`. Entries without
+these fields are unaffected. (Adapted from ECC's continuous-learning-v2, MIT.)
 
 ## Lifecycle
 
-Entries move through states rather than being deleted:
+**Retire** is the one word for taking an entry out of the active set. It is never a
+deletion, and it happens one of two ways, recorded in `status`:
 
 - **active** — current, trusted knowledge
 - **superseded** — replaced by a newer entry (keep for history; see `supersedes`)
 - **archived** — no longer relevant, kept for the record
+
+An entry that is replaced is retired as `superseded`; one that is merely finished with is
+retired as `archived`.
 
 `status` is how hot/cold separation works **without** moving files into new
 folders — the flat directory structure stays portable, and the index does the

@@ -1,12 +1,12 @@
 # BRAIN — Index
 
-_Auto-generated 2026-06-18 01:19. Do not edit by hand — run `build_index.py`._
+_Auto-generated 2026-11-22 01:45. Do not edit by hand — run `build_index.py`._
 
 ## Current state
 
 - **Latest handoff:** [HANDOFF — Claude → Grok — 2026-06-12](handoffs/2026-06-12-claude-to-grok.md) (2026-06-12)
-- **Last checkpoint:** [Checkpoint — Task filtering endpoint + spotted an N+1](checkpoints/2026-06-11-0930-task-filtering-n-plus-1.md) (2026-06-11)
-- **Active entries:** 7  ·  **Retired:** 1
+- **Active entries:** 5  ·  **Retired:** 3
+- **Learnings & patterns:** 0 global  ·  0 tentative
 
 ## Active knowledge
 
@@ -18,15 +18,15 @@ _Auto-generated 2026-06-18 01:19. Do not edit by hand — run `build_index.py`._
 
 ### Learnings (1)
 
-| Date | Title | Tags |
-|------|-------|------|
-| 2026-06-12 | [Learning — Lazy ORM relations are an N+1 trap in list endpoints](learnings/2026-06-12-orm-lazy-relations.md) | `orm`, `performance`, `testing` |
+| Date | Title | Confidence | Scope | Tags |
+|------|-------|------------|-------|------|
+| 2026-06-12 | [Learning — Lazy ORM relations are an N+1 trap in list endpoints](learnings/2026-06-12-orm-lazy-relations.md) | confirmed | project | `orm`, `performance`, `testing` |
 
 ### Patterns (1)
 
-| Date | Title | Tags |
-|------|-------|------|
-| 2026-06-13 | [Pattern — Assert a query-count ceiling on list endpoints](patterns/2026-06-13-query-count-ceiling.md) | `testing`, `performance`, `orm` |
+| Date | Title | Confidence | Scope | Tags |
+|------|-------|------------|-------|------|
+| 2026-06-13 | [Pattern — Assert a query-count ceiling on list endpoints](patterns/2026-06-13-query-count-ceiling.md) | confirmed | project | `testing`, `performance`, `orm` |
 
 ### Bugs (1)
 
@@ -40,15 +40,10 @@ _Auto-generated 2026-06-18 01:19. Do not edit by hand — run `build_index.py`._
 |------|-------|------|
 | 2026-06-12 | [HANDOFF — Claude → Grok — 2026-06-12](handoffs/2026-06-12-claude-to-grok.md) | `auth`, `handoff` |
 
-### Checkpoints (2)
+## Retired (superseded / archived)
 
 | Date | Title | Tags |
 |------|-------|------|
 | 2026-06-11 | [Checkpoint — Task filtering endpoint + spotted an N+1](checkpoints/2026-06-11-0930-task-filtering-n-plus-1.md) | `tasks`, `performance` |
 | 2026-06-10 | [Checkpoint — Auth middleware wired into the request pipeline](checkpoints/2026-06-10-1420-auth-middleware-wired.md) | `auth`, `jwt` |
-
-## Retired (superseded / archived)
-
-| Date | Title | Tags |
-|------|-------|------|
 | 2026-05-20 | [Decision — Start with HTTP Basic Auth for the prototype](decisions/2026-05-20-basic-auth-first-pass.md) | `auth`, `security` |
