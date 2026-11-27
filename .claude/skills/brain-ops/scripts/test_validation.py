@@ -57,6 +57,8 @@ def main():
             "## Open questions / next steps\n- more\n"))
         put(cp / "2026-11-05-skeleton.md", fm("checkpoint", status="skeleton") + "# Hook\n")
         put(cp / "2026-11-06-archived.md", fm("checkpoint", status="archived") + "# Old\n")
+        # Windows editors (Notepad, PowerShell 5 Out-File) save UTF-8 with a BOM
+        put(cp / "2026-11-08-bom-archived.md", "﻿" + fm("checkpoint", status="archived") + "# Old\n")
         put(cp / "2026-11-07-template.md",
             (TEMPLATES / "checkpoint-template.md").read_text(encoding="utf-8"))
 
@@ -98,6 +100,9 @@ def main():
         ok &= result(not any_for("skeleton.md"), "E. status: skeleton (hook) is ignored")
         ok &= result(not has("invalid-field", "skeleton.md"),
                      "E2. status: skeleton (hook) is a valid status, not an unknown one")
+        ok &= result(not has("missing-frontmatter", "bom-archived.md")
+                     and not any_for("bom-archived.md"),
+                     "F2. frontmatter after a UTF-8 BOM is read (archived stays archived)")
         ok &= result(not any_for("archived.md"), "F. archived title-only checkpoint is ignored")
         ok &= result(has("empty-checkpoint", "2026-11-07-template.md"),
                      "G. an unfilled copy of the template (with footer) is flagged")

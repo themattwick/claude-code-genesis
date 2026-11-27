@@ -92,6 +92,8 @@ def find_brain_root(start: Path) -> Path | None:
 
 def parse_frontmatter(text: str) -> dict:
     """Parse a leading --- ... --- YAML-ish block. Supports scalars and [lists]."""
+    # A UTF-8 BOM (Windows editors) hid the frontmatter: archived entries read as active.
+    text = text.lstrip("﻿")
     if not text.startswith("---"):
         return {}
     end = text.find("\n---", 3)
@@ -236,6 +238,7 @@ def split_sections(text: str) -> dict[str, list[str]]:
     heading. Frontmatter is dropped, and so is everything from the first `---` rule
     onwards: a footer below the rule is template boilerplate ("Instructions for the
     model...") and must never count as the entry's own content."""
+    text = text.lstrip("﻿")
     if text.startswith("---"):
         end = text.find("\n---", 3)
         text = text[end + 4:] if end != -1 else text
