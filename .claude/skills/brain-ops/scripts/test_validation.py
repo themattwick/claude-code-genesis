@@ -96,6 +96,8 @@ def main():
                      "C. empty Left off is flagged")
         ok &= result(not any_for("legacy.md"), "D. legacy-heading checkpoint with content is left alone")
         ok &= result(not any_for("skeleton.md"), "E. status: skeleton (hook) is ignored")
+        ok &= result(not has("invalid-field", "skeleton.md"),
+                     "E2. status: skeleton (hook) is a valid status, not an unknown one")
         ok &= result(not any_for("archived.md"), "F. archived title-only checkpoint is ignored")
         ok &= result(has("empty-checkpoint", "2026-11-07-template.md"),
                      "G. an unfilled copy of the template (with footer) is flagged")

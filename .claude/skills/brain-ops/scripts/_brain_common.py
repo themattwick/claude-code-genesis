@@ -36,7 +36,9 @@ DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
 VALID_TYPES = {"checkpoint", "session", "decision", "bug", "learning",
                "pattern", "handoff", "glossary", "reference", "spec", "removal"}
-VALID_STATUSES = {"active", "superseded", "archived"}
+# `skeleton` is written by the PreCompact hook and finished by the SessionStart hook;
+# it is a real status, so hygiene must not report it as unknown.
+VALID_STATUSES = {"active", "superseded", "archived", "skeleton"}
 
 # Trust fields (optional). Adapted from the continuous-learning-v2 skill in ECC
 # (affaan-m/ECC), MIT. `confidence` says how sure we are; `scope` says where the
