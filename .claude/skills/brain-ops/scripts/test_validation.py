@@ -58,7 +58,7 @@ def main():
         put(cp / "2026-11-05-skeleton.md", fm("checkpoint", status="skeleton") + "# Hook\n")
         put(cp / "2026-11-06-archived.md", fm("checkpoint", status="archived") + "# Old\n")
         # Windows editors (Notepad, PowerShell 5 Out-File) save UTF-8 with a BOM
-        put(cp / "2026-11-08-bom-archived.md", "﻿" + fm("checkpoint", status="archived") + "# Old\n")
+        put(cp / "2026-11-08-bom-archived.md", "\ufeff" + fm("checkpoint", status="archived") + "# Old\n")
         put(cp / "2026-11-07-template.md",
             (TEMPLATES / "checkpoint-template.md").read_text(encoding="utf-8"))
 
